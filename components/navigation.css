@@ -1,0 +1,42 @@
+.navigation-container1 {
+  display: contents;
+}
+ 
+.navigation-container2 {
+  display: none;
+}
+ 
+.navigation-container3 {
+  display: contents;
+}
+ 
+.navigation-thq-navigation-logo-icon-elm1 {
+  border: 2px dashed rgba(120, 120, 120, 0.4);
+}
+ 
+.navigation-thq-navigation-brand-detail-elm {
+  opacity: 0.7;
+  font-weight: 400;
+}
+ 
+.navigation-container4 {
+  display: none;
+}
+ 
+.navigation-container5 {
+  display: contents;
+}
+ 
+.navigation-container6 {
+  display: none;
+}
+ 
+.navigation-container7 {
+  display: contents;
+}
+ 
+@media(max-width: 767px) {
+  .navigation-thq-navigation-brand-detail-elm {
+    display: none;
+  }
+}
