@@ -208,34 +208,35 @@
               </div>
               <div class="navigation-overlay-content">
                 <ul class="navigation-mobile-links">
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>Services</span>
-                      </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>Events</span>
-                      </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>Equipment</span>
-                      </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>About</span>
-                      </div>
-                    </a>
-                  </li>
+                    <li>
+                        <a href="/">
+                            <div class="navigation-mobile-link"><span>Home</span></div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#contact">
+                            <div class="navigation-mobile-link"><span>Kontakt</span></div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="404.html">
+                            <div class="navigation-mobile-link">
+                                <span>Equipment</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="404.html">
+                            <div class="navigation-mobile-link"><span>Galerie</span></div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/events">
+                            <div class="navigation-mobile-link">
+                                <span>Veranstaltungskalender</span>
+                            </div>
+                        </a>
+                    </li>
                 </ul>
                 <div class="navigation-mobile-actions">
                   <a href="index.html">
@@ -291,11 +292,11 @@
                         }
                       })
 
-                      //window.addEventListener("resize", () => {
-                      //  if (window.innerWidth > 767 && mobileOverlay.classList.contains("is-active")) {
-                      //    closeMenu()
-                      //  }
-                      //})
+                      window.addEventListener("resize", () => {
+                        if (window.innerWidth > 767 && mobileOverlay.classList.contains("is-active")) {
+                          closeMenu()
+                        }
+                      })
                     })()
                   });
                 </script>
