@@ -1239,9 +1239,7 @@
 .services-wrapper {
   margin: 0 auto;
   padding: 0 var(--spacing-xl);
-  max-width: var(--content-max-width);
-    display: flex;
-    flex-direction: column;
+    width: 100%;
 }
  
 .services-header {
@@ -1252,20 +1250,23 @@
 .services-grid {
     display: grid;
     gap: var(--spacing-xl);
-    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
- 
+
+
 .service-card {
-  gap: var(--spacing-md);
-  border: 1px solid var(--color-border);
-  display: flex;
-  padding: var(--spacing-2xl);
-  transition: all 0.3s ease;
-  border-radius: var(--border-radius-card);
-  flex-direction: column;
-  background-color: var(--color-surface-elevated);
+    min-width: 0;
+    gap: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    display: flex;
+    padding: var(--spacing-2xl);
+    transition: all 0.3s ease;
+    border-radius: var(--border-radius-card);
+    flex-direction: column;
+    background-color: var(--color-surface-elevated);
 }
+
  
 .service-icon-box {
   color: var(--color-primary);
