@@ -37,6 +37,11 @@ def index():
 def events():
     return send_from_directory('static', 'events.html')
 
+@app.route('/gear')
+@requires_auth
+def gear():
+    return send_from_directory('static', 'gear.html')
+
 # Serve everything else from static at the root
 @app.route('/<path:path>')
 @requires_auth
