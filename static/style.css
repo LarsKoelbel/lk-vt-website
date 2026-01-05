@@ -1240,18 +1240,21 @@
   margin: 0 auto;
   padding: 0 var(--spacing-xl);
   max-width: var(--content-max-width);
+    display: flex;
+    flex-direction: column;
 }
  
 .services-header {
   text-align: center;
   margin-bottom: var(--spacing-4xl);
 }
- 
+
 .services-grid {
-  gap: var(--spacing-xl);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+    display: grid;
+    gap: var(--spacing-xl);
+    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
 }
+
  
 .service-card {
   gap: var(--spacing-md);
