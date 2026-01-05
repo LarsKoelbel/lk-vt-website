@@ -69,240 +69,223 @@
       <link href="index.css" rel="stylesheet" />
 
       <div class="home-container1">
-        <navigation-wrapper class="navigation-wrapper">
-          <!--Navigation component-->
-          <div class="navigation-container1">
-            <div class="navigation-container2">
-              <div class="navigation-container3">
-                <style>
-                  @media (prefers-reduced-motion: reduce) {
-                  .navigation-mobile-overlay.is-active {
-                    animation: none;
-                  }
-                  }
-                </style>
-              </div>
-            </div>
-            <nav class="navigation-root">
-              <div class="navigation-container">
-                <a href="/">
-                  <div
-                    aria-label="LK Veranstaltungstechnik Home"
-                    class="navigation-brand"
-                  >
-                    <div
-                      class="navigation-thq-navigation-logo-icon-elm1 navigation-logo-icon"
-                    ></div>
-                    <span class="section-title">
+          <navigation-wrapper class="navigation-wrapper">
+              <!--Navigation component-->
+              <div class="navigation-container1">
+                  <div class="navigation-container2">
+                      <div class="navigation-container3">
+                          <style>
+                              @media (prefers-reduced-motion: reduce) {
+                                  .navigation-mobile-overlay.is-active {
+                                      animation: none;
+                                  }
+                              }
+                          </style>
+                      </div>
+                  </div>
+                  <nav class="navigation-root">
+                      <div class="navigation-container">
+                          <a href="/">
+                              <div
+                                      aria-label="LK Veranstaltungstechnik Home"
+                                      class="navigation-brand"
+                              >
+                                  <div
+                                          class="navigation-thq-navigation-logo-icon-elm1 navigation-logo-icon"
+                                  ></div>
+                                  <span class="section-title">
                       <span>LK</span>
                       <span class="navigation-thq-navigation-brand-detail-elm">
                         Veranstaltungstechnik
                       </span>
                     </span>
+                              </div>
+                          </a>
+                          <div class="navigation-desktop-menu">
+                              <ul class="navigation-links">
+                                  <li>
+                                      <a href="/">
+                                          <div class="navigation-link"><span>Home</span></div>
+                                      </a>
+                                  </li>
+                                  <li>
+                                      <a href="#contact">
+                                          <div class="navigation-link"><span>Kontakt</span></div>
+                                      </a>
+                                  </li>
+                                  <li>
+                                      <a href="404.html">
+                                          <div class="navigation-link">
+                                              <span>Equipment</span>
+                                          </div>
+                                      </a>
+                                  </li>
+                                  <li>
+                                      <a href="404.html">
+                                          <div class="navigation-link"><span>Galerie</span></div>
+                                      </a>
+                                  </li>
+                                  <li>
+                                      <a href="/events">
+                                          <div class="navigation-link">
+                                              <span>Veranstaltungskalender</span>
+                                          </div>
+                                      </a>
+                                  </li>
+                              </ul>
+                          </div>
+                          <button
+                                  id="navToggle"
+                                  aria-label="Open Menu"
+                                  aria-expanded="false"
+                                  class="navigation-toggle"
+                          >
+                              <svg
+                                      width="24"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      height="24"
+                                      viewBox="0 0 24 24"
+                              >
+                                  <path
+                                          d="M4 6h16M4 12h16M4 18h16"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          stroke-width="2"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"
+                                  ></path>
+                              </svg>
+                          </button>
+                      </div>
+                  </nav>
+                  <div id="mobileOverlay" class="navigation-mobile-overlay">
+                      <div class="navigation-overlay-header">
+                          <a href="/">
+                              <div class="navigation-brand">
+                                  <span class="section-title">LK</span>
+                              </div>
+                          </a>
+                          <button
+                                  id="navClose"
+                                  aria-label="Close Menu"
+                                  class="navigation-close"
+                          >
+                              <svg
+                                      width="24"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      height="24"
+                                      viewBox="0 0 24 24"
+                              >
+                                  <g
+                                          fill="none"
+                                          stroke="currentColor"
+                                          stroke-width="2"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"
+                                  >
+                                      <rect x="3" y="3" rx="2" width="18" height="18"></rect>
+                                      <path d="M9 16l3-3l3 3"></path>
+                                  </g>
+                              </svg>
+                          </button>
+                      </div>
+                      <div class="navigation-overlay-content">
+                          <ul class="navigation-mobile-links">
+                              <li>
+                                  <a href="/">
+                                      <div class="navigation-mobile-link"><span>Home</span></div>
+                                  </a>
+                              </li>
+                              <li>
+                                  <a href="#contact">
+                                      <div class="navigation-mobile-link"><span>Kontakt</span></div>
+                                  </a>
+                              </li>
+                              <li>
+                                  <a href="404.html">
+                                      <div class="navigation-mobile-link">
+                                          <span>Equipment</span>
+                                      </div>
+                                  </a>
+                              </li>
+                              <li>
+                                  <a href="404.html">
+                                      <div class="navigation-mobile-link"><span>Galerie</span></div>
+                                  </a>
+                              </li>
+                              <li>
+                                  <a href="/events">
+                                      <div class="navigation-mobile-link">
+                                          <span>Veranstaltungskalender</span>
+                                      </div>
+                                  </a>
+                              </li>
+                          </ul>
+                          <div class="navigation-mobile-actions">
+                              <a href="index.html">
+                                  <div class="btn-lg btn-primary btn">
+                                      <span>Get a Quote</span>
+                                  </div>
+                              </a>
+                              <p class="section-content">
+                                  Große Technik für kleine Events
+                              </p>
+                          </div>
+                      </div>
                   </div>
-                </a>
-                <div class="navigation-desktop-menu">
-                  <ul class="navigation-links">
-                    <li>
-                      <a href="/">
-                        <div class="navigation-link"><span>Home</span></div>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/#contact">
-                        <div class="navigation-link"><span>Kontakt</span></div>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="404.html">
-                        <div class="navigation-link">
-                          <span>Equipment</span>
-                        </div>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="404.html">
-                        <div class="navigation-link"><span>Galerie</span></div>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="/events">
-                        <div class="navigation-link">
-                          <span>Veranstaltungskalender</span>
-                        </div>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-                <button
-                  id="navToggle"
-                  aria-label="Open Menu"
-                  aria-expanded="false"
-                  class="navigation-toggle"
-                >
-                  <svg
-                    width="24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="24"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M4 6h16M4 12h16M4 18h16"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    ></path>
-                  </svg>
-                </button>
-              </div>
-            </nav>
-            <div id="mobileOverlay" class="navigation-mobile-overlay">
-              <div class="navigation-overlay-header">
-                <a href="index.html">
-                  <div class="navigation-brand">
-                    <div class="navigation-logo-icon">
-                      <svg
-                        width="24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="24"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M10.268 21a2 2 0 0 0 3.464 0M15 8h6m-3-3v6m2.002 3.464a9 9 0 0 0 .738.863A1 1 0 0 1 20 17H4a1 1 0 0 1-.74-1.673C4.59 13.956 6 12.499 6 8a6 6 0 0 1 8.75-5.332"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        ></path>
-                      </svg>
-                    </div>
-                    <span class="section-title">LK</span>
+                  <div class="navigation-container4">
+                      <div class="navigation-container5">
+                          <style>
+                              @keyframes overlayFadeIn {from {opacity: 0;
+                                  transform: translateY(-10px);}
+                                  to {opacity: 1;
+                                      transform: translateY(0);}}
+                          </style>
+                      </div>
                   </div>
-                </a>
-                <button
-                  id="navClose"
-                  aria-label="Close Menu"
-                  class="navigation-close"
-                >
-                  <svg
-                    width="24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="24"
-                    viewBox="0 0 24 24"
-                  >
-                    <g
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <rect x="3" y="3" rx="2" width="18" height="18"></rect>
-                      <path d="M9 16l3-3l3 3"></path>
-                    </g>
-                  </svg>
-                </button>
-              </div>
-              <div class="navigation-overlay-content">
-                <ul class="navigation-mobile-links">
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>Services</span>
+                  <div class="navigation-container6">
+                      <div class="navigation-container7">
+                          <script defer="" data-name="navigation-logic">
+                              document.addEventListener('DOMContentLoaded', function() {
+                                  (function(){
+                                      const navToggle = document.getElementById("navToggle")
+                                      const navClose = document.getElementById("navClose")
+                                      const mobileOverlay = document.getElementById("mobileOverlay")
+                                      const body = document.body
+
+                                      const openMenu = () => {
+                                          mobileOverlay.classList.add("is-active")
+                                          navToggle.setAttribute("aria-expanded", "true")
+                                          body.style.overflow = "hidden"
+                                      }
+
+                                      const closeMenu = () => {
+                                          mobileOverlay.classList.remove("is-active")
+                                          navToggle.setAttribute("aria-expanded", "false")
+                                          body.style.overflow = ""
+                                      }
+
+                                      navToggle.addEventListener("click", openMenu)
+                                      navClose.addEventListener("click", closeMenu)
+
+                                      mobileOverlay.addEventListener("click", (e) => {
+                                          if (e.target.classList.contains("navigation-mobile-link")) {
+                                              closeMenu()
+                                          }
+                                      })
+
+                                      window.addEventListener("resize", () => {
+                                          if (window.innerWidth > 767 && mobileOverlay.classList.contains("is-active")) {
+                                              closeMenu()
+                                          }
+                                      })
+                                  })()
+                              });
+                          </script>
                       </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>Events</span>
-                      </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>Equipment</span>
-                      </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html">
-                      <div class="navigation-mobile-link">
-                        <span>About</span>
-                      </div>
-                    </a>
-                  </li>
-                </ul>
-                <div class="navigation-mobile-actions">
-                  <a href="index.html">
-                    <div class="btn-lg btn-primary btn">
-                      <span>Get a Quote</span>
-                    </div>
-                  </a>
-                  <p class="section-content">
-                    Professional event lighting for private concerts &amp;
-                    theatre.
-                  </p>
-                </div>
+                  </div>
               </div>
-            </div>
-            <div class="navigation-container4">
-              <div class="navigation-container5">
-                <style>
-                          @keyframes overlayFadeIn {from {opacity: 0;
-                  transform: translateY(-10px);}
-                  to {opacity: 1;
-                  transform: translateY(0);}}
-                </style>
-              </div>
-            </div>
-            <div class="navigation-container6">
-              <div class="navigation-container7">
-                <script defer="" data-name="navigation-logic">
-                  document.addEventListener('DOMContentLoaded', function() {
-                    (function(){
-                      const navToggle = document.getElementById("navToggle")
-                      const navClose = document.getElementById("navClose")
-                      const mobileOverlay = document.getElementById("mobileOverlay")
-                      const body = document.body
-
-                      const openMenu = () => {
-                        mobileOverlay.classList.add("is-active")
-                        navToggle.setAttribute("aria-expanded", "true")
-                        body.style.overflow = "hidden"
-                      }
-
-                      const closeMenu = () => {
-                        mobileOverlay.classList.remove("is-active")
-                        navToggle.setAttribute("aria-expanded", "false")
-                        body.style.overflow = ""
-                      }
-
-                      navToggle.addEventListener("click", openMenu)
-                      navClose.addEventListener("click", closeMenu)
-
-                      mobileOverlay.addEventListener("click", (e) => {
-                        if (e.target.classList.contains("navigation-mobile-link")) {
-                          closeMenu()
-                        }
-                      })
-
-                      window.addEventListener("resize", () => {
-                        if (window.innerWidth > 767 && mobileOverlay.classList.contains("is-active")) {
-                          closeMenu()
-                        }
-                      })
-                    })()
-                  });
-                </script>
-              </div>
-            </div>
-          </div>
-        </navigation-wrapper>
+          </navigation-wrapper>
         <section class="hero-section-calender">
           <div class="hero-container">
             <div class="hero-main-cell">
