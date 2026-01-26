@@ -1,10 +1,16 @@
-from flask import Flask, send_from_directory, request, Response
+from flask import Flask, send_from_directory, request, Response, jsonify
+from pymongo import MongoClient
 
 app = Flask(__name__)
 
 # Simple credentials
 USERNAME = "admin"
 PASSWORD = "123456"
+
+# MongoDB Verbindung
+client = MongoClient("mongodb://root:1kblHc616MFcMZadsYU0lBy2CoaGAulo89lCsroCv0ca6Kst24@192.168.178.180:27017/?authSource=admin")
+db = client["events"]
+collection = db["events"]
 
 def check_auth(username, password):
     return username == USERNAME and password == PASSWORD
@@ -33,9 +39,37 @@ def index():
     return send_from_directory('static', 'index.html')
 
 @app.route('/events')
-@requires_auth
 def events():
-    return send_from_directory('static', 'events.html')
+    return send_from_directory('static', 'event_page.html')
+
+# Event API
+@app.route('/api/events', methods=['POST'])
+def get_event():
+    data = request.json
+    event_id_raw = data.get('event_id')
+
+    if not event_id_raw:
+        return jsonify({"error": "Keine Event ID angegeben"}), 400
+
+    try:
+        # Konvertierung zu Int, da dein Schema "id": 12345 nutzt
+        event_id = int(event_id_raw)
+
+        # Suche in MongoDB (id ohne Unterstrich, wie in deinem Schema)
+        event = collection.find_one({"id": event_id}, {"_id": 0})
+
+        if event:
+            return jsonify(event), 200
+        else:
+            return jsonify({
+                "error": "Event nicht gefunden",
+                "message": f"Das Event mit der ID {event_id} existiert nicht in unserer Datenbank."
+            }), 404
+
+    except ValueError:
+        return jsonify({"error": "Ungültiges ID-Format"}), 400
+    except Exception as e:
+        return jsonify({"error": "Serverfehler", "details": str(e)}), 500
 
 @app.route('/gear')
 @requires_auth
