@@ -264,7 +264,7 @@
         if (data.artist) {
             document.getElementById('artist-card').classList.remove('hidden');
             document.getElementById('artist-name').innerText = data.artist.name;
-            if (data.artist.image && data.artist.image.length > 50) document.getElementById('artist-image').src = `data:image/jpeg;base64,${data.artist.image}`;
+            if (data.artist.image && data.artist.image.length > 50) document.getElementById('artist-image').src = `${data.artist.image}`;
             else document.getElementById('artist-img-wrapper').classList.add('hidden');
         }
 
