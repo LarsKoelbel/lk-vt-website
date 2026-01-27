@@ -1,5 +1,6 @@
 from flask import Flask, send_from_directory, request, Response, jsonify
 from pymongo import MongoClient
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -33,6 +34,14 @@ def requires_auth(f):
         return f(*args, **kwargs)
     decorated.__name__ = f.__name__  # preserve function name
     return decorated
+
+@app.before_request
+def track_visit():
+    # Wir erfassen nur den aktuellen Zeitstempel
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    with open('log/visits.log', 'a') as f:
+        f.write(f"Visit at: {timestamp}\n")
 
 # Serve index.html at /
 @app.route('/')
