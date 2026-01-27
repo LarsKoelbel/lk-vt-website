@@ -101,6 +101,11 @@
                 <p id="main-description" class="text-xl text-slate-300 leading-relaxed font-light preserve-breaks"></p>
             </section>
 
+            <section id="participants-card" class="bento-card hidden">
+                <h3 class="text-slate-500 font-bold text-[10px] uppercase tracking-widest mb-6">Mitwirkende</h3>
+                <div id="participants-container" class="space-y-8"></div>
+            </section>
+
             <div id="extra-sections" class="space-y-8"></div>
         </div>
 
@@ -279,12 +284,71 @@
         }
     }
 
+    // --- Participants Logic ---
+    async function fetchParticipants(eventId) {
+        try {
+            const response = await fetch('/api/events/participants', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: parseInt(eventId) })
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+            if (data && data.groups && data.groups.length > 0) {
+                renderParticipants(data.groups);
+            }
+        } catch (e) { console.error("Participants API Error:", e); }
+    }
+
+    function renderParticipants(groups) {
+        const card = document.getElementById('participants-card');
+        const container = document.getElementById('participants-container');
+        container.innerHTML = "";
+
+        groups.forEach(group => {
+            const groupSection = document.createElement('div');
+            groupSection.innerHTML = `
+                <h4 class="text-white font-bold text-sm mb-4 pb-2 border-b border-white/5 uppercase tracking-wider">${group.group_name}</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="group-${group.group_name.replace(/\s+/g, '-')}"></div>
+            `;
+            const membersList = groupSection.querySelector('div');
+
+            group.members.forEach(m => {
+                const item = document.createElement(m.member_href ? 'a' : 'div');
+                if (m.member_href) {
+                    item.href = m.member_href;
+                    item.target = "_blank";
+                }
+                item.className = `flex items-center gap-3 p-2 rounded-xl transition-all ${m.member_href ? 'hover:bg-white/5 cursor-pointer group' : ''}`;
+
+                const imgHtml = m.member_image_source ?
+                    `<img src="${m.member_image_source}" class="w-8 h-8 rounded-full object-cover border border-white/10">` : '';
+
+                const roleHtml = m.member_role ? `<span class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">${m.member_role}</span>` : '';
+
+                item.innerHTML = `
+                    ${imgHtml}
+                    <div class="flex flex-col">
+                        <span class="text-slate-300 text-sm font-medium ${m.member_href ? 'group-hover:text-blue-400' : ''}">${m.member_name}</span>
+                        ${roleHtml}
+                    </div>
+                `;
+                membersList.appendChild(item);
+            });
+
+            container.appendChild(groupSection);
+        });
+
+        card.classList.remove('hidden');
+    }
+
     async function fetchEventData() {
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         if (!eventId) return;
 
         fetchWarningsAndInfo(eventId);
+        fetchParticipants(eventId);
 
         try {
             const response = await fetch('/api/events', {

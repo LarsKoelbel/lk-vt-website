@@ -107,6 +107,35 @@ def get_event_warnings_and_info():
         app.logger.error(f"Error in warnings_and_info: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
+@app.route('/api/events/participants', methods=['POST'])
+def get_event_participants():
+    try:
+        # Falls der Content-Type nicht exakt application/json ist,
+        # könnte Flask hier scheitern. silent=True verhindert Abstürze.
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({"error": "Invalid JSON"}), 400
+
+        event_id = data.get('id')
+
+        # Suche in der MongoDB
+        info_collection = client['events']['participants']
+
+        event_info = info_collection.find_one(
+            {"id": int(event_id)},
+            {"_id": 0}
+        )
+
+        if not event_info:
+            return jsonify({"message": "Not found"}), 404
+
+        return jsonify(event_info), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in participants: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
 @app.route('/gear')
 @requires_auth
 def gear():
