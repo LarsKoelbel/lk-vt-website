@@ -98,8 +98,6 @@ def get_event_warnings_and_info():
             {"_id": 0}
         )
 
-        print(event_info)
-
         if not event_info:
             return jsonify({"message": "Not found"}), 404
 
