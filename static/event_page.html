@@ -57,29 +57,31 @@
 
     <div id="event-details-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-8 space-y-8">
-            <section id="artist-card" class="bento-card flex flex-col md:flex-row gap-8 items-center hidden">
-                <div id="artist-img-wrapper" class="w-40 h-40 md:w-52 md:h-52 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-2xl">
-                    <img id="artist-image" class="w-full h-full object-cover" src="" alt="">
-                </div>
-                <div class="flex-1 text-center md:text-left">
-                    <span class="text-blue-500 font-bold uppercase tracking-widest text-[10px] mb-2 block">Künstler</span>
-                    <h2 id="artist-name" class="text-4xl md:text-5xl font-extrabold text-white"></h2>
-                </div>
-            </section>
-            <section id="desc-card" class="bento-card hidden">
-                <h3 class="text-slate-500 font-bold text-[10px] uppercase tracking-widest mb-4">Details</h3>
-                <p id="main-description" class="text-xl text-slate-300 leading-relaxed font-light preserve-breaks"></p>
-            </section>
-            <div id="extra-sections" class="space-y-8"></div>
-        </div>
-
-        <div class="lg:col-span-4 space-y-8">
             <section id="dates-card" class="bento-card hidden">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Aufführungen</h3>
                     <span class="text-[10px] text-slate-600 font-medium italic">Klick für Kalender</span>
                 </div>
                 <div id="dates-list" class="space-y-3"></div>
+            </section>
+
+            <section id="desc-card" class="bento-card hidden">
+                <h3 class="text-slate-500 font-bold text-[10px] uppercase tracking-widest mb-4">Details</h3>
+                <p id="main-description" class="text-xl text-slate-300 leading-relaxed font-light preserve-breaks"></p>
+            </section>
+
+            <div id="extra-sections" class="space-y-8"></div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-8">
+            <section id="artist-card" class="bento-card flex flex-col gap-6 items-center text-center hidden">
+                <div id="artist-img-wrapper" class="w-48 h-48 rounded-full overflow-hidden border border-white/10 shadow-2xl">
+                    <img id="artist-image" class="w-full h-full object-cover" src="" alt="">
+                </div>
+                <div>
+                    <span class="text-blue-500 font-bold uppercase tracking-widest text-[10px] mb-2 block">Künstler</span>
+                    <h2 id="artist-name" class="text-3xl font-extrabold text-white"></h2>
+                </div>
             </section>
 
             <section id="info-warning-card" class="bento-card hidden">
@@ -99,6 +101,14 @@
                 </div>
                 <div id="map-wrapper" class="h-48 mb-6 hidden overflow-hidden rounded-xl border border-slate-800"><div id="map"></div></div>
                 <button id="google-maps-btn" class="w-full text-center border border-slate-800 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">In Maps öffnen</button>
+            </section>
+
+            <section id="contact-card" class="bento-card hidden">
+                <h3 class="text-xs font-bold mb-6 text-slate-500 uppercase tracking-[0.2em]">Ansprechpartnerin</h3>
+                <div class="space-y-1">
+                    <p id="contact-name" class="font-bold text-white"></p>
+                    <a id="contact-email" href="" class="text-blue-500 text-sm hover:underline block"></a>
+                </div>
             </section>
         </div>
 
@@ -238,7 +248,6 @@
 
             document.getElementById('event-title').innerText = data.title;
             if (data.main_image && data.main_image.length > 50) {
-                const imgPrefix = data.main_image.startsWith('/') ? '' : 'data:image/jpeg;base64,';
                 document.getElementById('main-image').src = data.main_image;
             }
             renderContent(data);
@@ -253,9 +262,18 @@
                 const pill = document.createElement('div');
                 pill.className = "date-pill"; pill.innerText = `${d.date} • ${d.start} Uhr`; summary.appendChild(pill);
                 const item = document.createElement('div');
-                item.className = "date-row-card flex justify-between items-center group";
+                item.className = "date-row-card flex justify-between items-center group w-full";
                 item.onclick = () => redirectToCalendar(data.title, d.date, d.start, d.end, data.location ? data.location.location_name : '');
-                item.innerHTML = `<div><span class="text-white font-bold group-hover:text-blue-400 transition-colors">${d.date}</span><div class="flex items-center gap-2 mt-1"><span class="text-[10px] text-slate-500 uppercase tracking-widest">${d.start} - ${d.end} Uhr</span>${d.duration ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">Dauer: ${d.duration}</span>` : ''}${d.entrance ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/10 ml-2 font-bold uppercase">Einlass: ${d.entrance}</span>` : ''}</div></div><div class="h-8 w-8 rounded-full border border-slate-800 flex items-center justify-center text-xs group-hover:border-blue-500/50 transition-all">📅</div>`;
+                item.innerHTML = `
+                    <div>
+                        <span class="text-white font-bold group-hover:text-blue-400 transition-colors">${d.date}</span>
+                        <div class="flex flex-wrap items-center gap-2 mt-1">
+                            <span class="text-[10px] text-slate-500 uppercase tracking-widest">${d.start} - ${d.end} Uhr</span>
+                            ${d.entrance ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/10 font-bold uppercase">Einlass: ${d.entrance}</span>` : ''}
+                            ${d.duration ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">Dauer: ${d.duration}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="h-8 w-8 rounded-full border border-slate-800 flex items-center justify-center text-xs group-hover:border-blue-500/50 transition-all">📅</div>`;
                 list.appendChild(item);
             });
             document.getElementById('dates-card').classList.remove('hidden');
@@ -283,8 +301,6 @@
                 const isRight = s.show_image_on_right === true;
 
                 if (hasImage && (isLeft || isRight)) {
-                    // Flex-Layout für Side-by-Side (links oder rechts)
-                    // row-reverse sorgt dafür, dass das Bild rechts steht auf Desktop
                     div.className = `bento-card flex flex-col md:flex-row gap-8 items-center ${isRight ? 'md:flex-row-reverse' : ''}`;
                     div.innerHTML = `
                         <div class="w-40 h-40 md:w-52 md:h-52 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-2xl">
@@ -295,7 +311,6 @@
                             <p class="text-slate-400 font-light leading-relaxed preserve-breaks">${linkify(s.text)}</p>
                         </div>`;
                 } else {
-                    // Standard-Layout (Bild oben)
                     div.className = "bento-card overflow-hidden !p-0";
                     div.innerHTML = `
                         ${hasImage ? `<img src="${s.image}" class="w-full h-80 object-cover opacity-90">` : ''}
@@ -322,10 +337,18 @@
             if (data.location.show_location_on_map && coordsRaw) {
                 document.getElementById('map-wrapper').classList.remove('hidden');
                 const coords = coordsRaw.split('|').map(Number);
-                const map = L.map('map', {zoomControl:false}).setView(coords, 14);
+                const map = L.map('map', {zoomControl:false}).setView(coords, 10);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
                 L.marker(coords).addTo(map);
             }
+        }
+
+        if (data.contact) {
+            document.getElementById('contact-card').classList.remove('hidden');
+            document.getElementById('contact-name').innerText = data.contact.name;
+            const emailEl = document.getElementById('contact-email');
+            emailEl.innerText = data.contact.email;
+            emailEl.href = `mailto:${data.contact.email}`;
         }
 
         if (data.ticket_redirects && data.ticket_redirects.show_ticket_redirects) {
