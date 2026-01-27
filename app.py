@@ -3,6 +3,8 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 # Simple credentials
 USERNAME = "admin"
 PASSWORD = "123456"
@@ -38,6 +40,10 @@ def requires_auth(f):
 def index():
     return send_from_directory('static', 'index.html')
 
+@app.route('/events/info/tags')
+def events_warnings_and_info():
+    return send_from_directory('static', 'warning_and_info.html')
+
 @app.route('/events')
 def events():
     return send_from_directory('static', 'event_page.html')
@@ -70,6 +76,38 @@ def get_event():
         return jsonify({"error": "Ungültiges ID-Format"}), 400
     except Exception as e:
         return jsonify({"error": "Serverfehler", "details": str(e)}), 500
+
+
+@app.route('/api/events/warnings_and_info', methods=['POST'])
+def get_event_warnings_and_info():
+    try:
+        # Falls der Content-Type nicht exakt application/json ist,
+        # könnte Flask hier scheitern. silent=True verhindert Abstürze.
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({"error": "Invalid JSON"}), 400
+
+        event_id = data.get('id')
+
+        # Suche in der MongoDB
+        info_collection = client['events']['warnings_and_info']
+
+        event_info = info_collection.find_one(
+            {"id": int(event_id)},
+            {"_id": 0}
+        )
+
+        print(event_info)
+
+        if not event_info:
+            return jsonify({"message": "Not found"}), 404
+
+        return jsonify(event_info), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in warnings_and_info: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route('/gear')
 @requires_auth

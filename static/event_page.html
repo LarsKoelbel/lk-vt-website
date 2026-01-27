@@ -22,9 +22,10 @@
         .glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
         .badge-warning { background: #f59e0b; color: #000; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
         .preserve-breaks { white-space: pre-line; }
-        /* Styling für klickbare Links im Text */
         .content-link { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; font-weight: 600; transition: opacity 0.2s; }
         .content-link:hover { opacity: 0.7; }
+        .info-label { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
+        .warn-label { border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); color: #fca5a5; }
     </style>
 </head>
 <body class="pb-24">
@@ -51,7 +52,7 @@
 
     <section id="preview-countdown-card" class="hidden bento-card border-blue-500/30 mb-12 text-center py-12">
         <p class="text-slate-500 text-xs uppercase tracking-[0.3em] mb-4">Veröffentlichung in</p>
-        <div id="countdown" class="text-5xl md:text-7xl font-black text-white tracking-tighter glow-text"></div>
+        <div id="countdown" class="text-5xl md:text-7xl font-black text-white tracking-tighter glow-text font-mono">--:--:--:--</div>
     </section>
 
     <div id="event-details-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -80,6 +81,16 @@
                 </div>
                 <div id="dates-list" class="space-y-3"></div>
             </section>
+
+            <section id="info-warning-card" class="bento-card hidden">
+                <h3 class="text-xs font-bold mb-6 text-slate-500 uppercase tracking-[0.2em]">Info & Hinweise</h3>
+                <div id="info-warning-list" class="space-y-3 mb-6"></div>
+                <a href="/events/info/tags" class="flex items-center justify-between group p-3 rounded-xl border border-slate-800 hover:border-blue-500/50 transition-all">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-blue-400 transition-colors">Weitere Informationen</span>
+                    <span class="text-slate-600 group-hover:text-blue-400 transition-colors text-xs">➔</span>
+                </a>
+            </section>
+
             <section id="location-container" class="bento-card hidden">
                 <h3 class="text-xs font-bold mb-6 text-slate-500 uppercase tracking-[0.2em]">Veranstaltungsort</h3>
                 <div class="mb-6">
@@ -109,7 +120,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Funktion zum Umwandeln von Text-Links in klickbare HTML-Links
     function linkify(text) {
         if (!text) return "";
         const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
@@ -125,10 +135,79 @@
         window.open(url, '_blank');
     }
 
+    function initCountdown(targetDateStr) {
+        const countdownEl = document.getElementById('countdown');
+        const targetDate = new Date(targetDateStr).getTime();
+        if (isNaN(targetDate)) return;
+
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            if (distance < 0) {
+                clearInterval(timer);
+                countdownEl.innerText = "JETZT VERFÜGBAR";
+                setTimeout(() => location.reload(), 2000);
+                return;
+            }
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+            countdownEl.innerText = `${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+        }, 1000);
+    }
+
+    async function fetchWarningsAndInfo(eventId) {
+        try {
+            const response = await fetch('/api/events/warnings_and_info', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: eventId })
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+            const parsedData = (typeof data === 'string') ? JSON.parse(data) : data;
+            renderWarningsAndInfo(parsedData);
+        } catch (e) { console.error("Info API Error:", e); }
+    }
+
+    function renderWarningsAndInfo(data) {
+        const container = document.getElementById('info-warning-card');
+        const list = document.getElementById('info-warning-list');
+        list.innerHTML = "";
+        let hasContent = false;
+
+        const entries = [
+            { condition: data.warn_strobe_lights, text: "Stroboskop-Effekte", icon: "⚡", isWarn: true },
+            { condition: data.warn_haze_machines, text: "Nebel / Haze im Einsatz", icon: "💨", isWarn: true },
+            { condition: data.warn_loud_sounds, text: "Hoher Schalldruckpegel", icon: "🔊", isWarn: true },
+            { condition: data.warn_other, text: data.warn_other, icon: "⚠️", isWarn: true },
+            { condition: data.info_is_wheelchair_accessible, text: "Barrierefrei", icon: "♿", isWarn: false },
+            { condition: data.info_has_parking, text: "Parkplätze vorhanden", icon: "🚗", isWarn: false },
+            { condition: data.info_has_public_transportation, text: "ÖPNV Anbindung", icon: "🚌", isWarn: false },
+            { condition: data.info_has_food_and_drinks, text: "Gastronomie vor Ort", icon: "🍹", isWarn: false },
+            { condition: data.info_other, text: data.info_other, icon: "ℹ️", isWarn: false }
+        ];
+
+        entries.forEach(entry => {
+            if (entry.condition === true || entry.condition === "true" || (typeof entry.condition === 'string' && entry.condition.length > 1)) {
+                hasContent = true;
+                const div = document.createElement('div');
+                div.className = `info-label ${entry.isWarn ? 'warn-label' : ''}`;
+                div.innerHTML = `<span>${entry.icon}</span><span class="font-medium">${entry.text}</span>`;
+                list.appendChild(div);
+            }
+        });
+
+        if (hasContent) container.classList.remove('hidden');
+    }
+
     async function fetchEventData() {
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         if (!eventId) return;
+
+        fetchWarningsAndInfo(eventId);
 
         try {
             const response = await fetch('/api/events', {
@@ -146,21 +225,27 @@
                 return;
             }
 
-            if (data.is_preview !== false && data.is_preview !== "false") {
+            const previewVal = data.is_preview;
+            const isPreviewActive = (previewVal !== false && previewVal !== "false");
+
+            if (isPreviewActive) {
                 document.getElementById('event-details-grid').classList.add('hidden');
                 document.getElementById('preview-header-info').classList.remove('hidden');
+                document.getElementById('preview-countdown-card').classList.remove('hidden');
+                const dateToUse = (typeof previewVal === 'string' && previewVal.length > 5) ? previewVal : data.release_date_and_time;
+                if (dateToUse) initCountdown(dateToUse);
             }
 
             document.getElementById('event-title').innerText = data.title;
             if (data.main_image && data.main_image.length > 50) {
-                document.getElementById('main-image').src = `data:image/jpeg;base64,${data.main_image}`;
+                const imgPrefix = data.main_image.startsWith('/') ? '' : 'data:image/jpeg;base64,';
+                document.getElementById('main-image').src = data.main_image;
             }
             renderContent(data);
         } catch (e) { console.error(e); }
     }
 
     function renderContent(data) {
-        // Header & Termine
         if (data.dates && data.dates.length > 0) {
             const summary = document.getElementById('event-dates-summary');
             const list = document.getElementById('dates-list');
@@ -176,7 +261,6 @@
             document.getElementById('dates-card').classList.remove('hidden');
         }
 
-        // Artist
         if (data.artist) {
             document.getElementById('artist-card').classList.remove('hidden');
             document.getElementById('artist-name').innerText = data.artist.name;
@@ -184,13 +268,11 @@
             else document.getElementById('artist-img-wrapper').classList.add('hidden');
         }
 
-        // Description mit Link-Support
         if (data.main_description) {
             document.getElementById('desc-card').classList.remove('hidden');
             document.getElementById('main-description').innerHTML = linkify(data.main_description);
         }
 
-        // Sektionen mit Link-Support
         if (data.sections && data.sections.show_sections) {
             const container = document.getElementById('extra-sections');
             container.innerHTML = "";
@@ -198,7 +280,7 @@
                 const div = document.createElement('div');
                 div.className = "bento-card overflow-hidden !p-0";
                 div.innerHTML = `
-                        ${s.image && s.image.length > 50 ? `<img src="data:image/jpeg;base64,${s.image}" class="w-full h-80 object-cover opacity-90">` : ''}
+                        ${s.image && s.image.length > 50 ? `<img src="${s.image}" class="w-full h-80 object-cover opacity-90">` : ''}
                         <div class="p-8">
                             ${s.title ? `<h3 class="text-2xl font-extrabold mb-4 text-white">${s.title}</h3>` : ''}
                             <p class="text-slate-400 font-light leading-relaxed preserve-breaks">${linkify(s.text)}</p>
@@ -207,22 +289,27 @@
             });
         }
 
-        // Location
         if (data.location) {
             document.getElementById('location-container').classList.remove('hidden');
             document.getElementById('location-name').innerText = data.location.location_name;
             document.getElementById('location-address').innerText = data.location.location_address;
-            document.getElementById('google-maps-btn').onclick = () => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.location.location_name + ' ' + data.location.location_address)}`, '_blank');
-            if (data.location.show_location_on_map) {
+
+            // KORREKTUR HIER: Template Literal Syntax korrigiert ($ statt 0)
+            document.getElementById('google-maps-btn').onclick = () => {
+                const query = encodeURIComponent(`${data.location.location_name} ${data.location.location_address}`);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+            };
+
+            const coordsRaw = data.location.loacation_coordinates || data.location.location_coordinates;
+            if (data.location.show_location_on_map && coordsRaw) {
                 document.getElementById('map-wrapper').classList.remove('hidden');
-                const coords = data.location.loacation_coordinates.split('|').map(Number);
+                const coords = coordsRaw.split('|').map(Number);
                 const map = L.map('map', {zoomControl:false}).setView(coords, 14);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
                 L.marker(coords).addTo(map);
             }
         }
 
-        // Tickets
         if (data.ticket_redirects && data.ticket_redirects.show_ticket_redirects) {
             document.getElementById('tickets-container').classList.remove('hidden');
             const tList = document.getElementById('tickets-list');

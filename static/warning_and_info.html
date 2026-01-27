@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informationen & Hinweise - Lars Kölbel Veranstaltungstechnik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        :root { --bg-dark: #080a0f; --card-bg: #12151c; --text-main: #f8fafc; --border-color: #1e293b; --accent: #3b82f6; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-dark); color: var(--text-main); line-height: 1.6; }
+        .bento-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; padding: 2rem; }
+        .tag-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; items-center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+        .bg-warn { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .bg-info { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 600; font-size: 0.9rem; margin-bottom: 2rem; transition: opacity 0.2s; }
+        .back-btn:hover { opacity: 0.7; }
+    </style>
+</head>
+<body class="py-12 md:py-24">
+
+<main class="max-w-4xl mx-auto px-6">
+    <a href="javascript:history.back()" class="back-btn">
+        <span>←</span> Zurück zum Event
+    </a>
+
+    <header class="mb-16">
+        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">Hinweise & Symbole</h1>
+        <p class="text-slate-400 text-lg max-w-2xl">
+            Damit dein Besuch bei unseren Veranstaltungen sicher und angenehm verläuft, findest du hier detaillierte Erklärungen zu den Markierungen in unseren Event-Cards.
+        </p>
+    </header>
+
+    <section class="mb-12">
+        <h2 class="text-xs font-bold text-red-500 uppercase tracking-[0.3em] mb-6">Wichtige Sicherheitshinweise</h2>
+        <div class="grid gap-6">
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-warn">⚡</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Stroboskop-Effekte</h3>
+                    <p class="text-slate-400 text-sm">Diese Veranstaltung nutzt schnelle Lichtblitze (Stroboskopie). Dies kann bei Personen mit photosensibler Epilepsie oder ähnlichen Erkrankungen Anfälle auslösen.</p>
+                </div>
+            </div>
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-warn">💨</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Nebel / Haze im Einsatz</h3>
+                    <p class="text-slate-400 text-sm">Es kommen künstlicher Nebel oder Dunst-Erzeuger (Haze) auf Wasserbasis zum Einsatz. Diese dienen zur Sichtbarmachung von Lichtstrahlen und sind gesundheitlich unbedenklich, können aber bei extremer Sensibilität Reizungen auslösen.</p>
+                </div>
+            </div>
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-warn">🔊</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Hoher Schalldruckpegel</h3>
+                    <p class="text-slate-400 text-sm">Während der Show werden hohe Lautstärken erreicht. Wir empfehlen empfindlichen Personen oder Kindern das Tragen eines Gehörschutzes. Oft halten wir kostenlose Ohrstöpsel am Einlass bereit.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section>
+        <h2 class="text-xs font-bold text-blue-500 uppercase tracking-[0.3em] mb-6">Besucher-Informationen</h2>
+        <div class="grid gap-6">
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-info">♿</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Barrierefreiheit</h3>
+                    <p class="text-slate-400 text-sm">Der Veranstaltungsort ist für Rollstuhlfahrer zugänglich. Dies beinhaltet in der Regel ebenerdige Zugänge oder Rampen sowie entsprechend ausgestattete Sanitäranlagen.</p>
+                </div>
+            </div>
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-info">🚗</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Parkplätze</h3>
+                    <p class="text-slate-400 text-sm">Unmittelbar am Veranstaltungsort oder in fußläufiger Nähe stehen Parkmöglichkeiten für PKW zur Verfügung.</p>
+                </div>
+            </div>
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-info">🚌</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">ÖPNV Anbindung</h3>
+                    <p class="text-slate-400 text-sm">Die Location ist gut mit öffentlichen Verkehrsmitteln (Bus, Bahn, Tram) erreichbar. Details finden sich oft direkt im Standort-Link der Event-Seite.</p>
+                </div>
+            </div>
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-info">🍹</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Gastronomie</h3>
+                    <p class="text-slate-400 text-sm">Vor Ort gibt es ein Angebot an Speisen und/oder Getränken. Die Bezahlung erfolgt je nach Location bar oder bargeldlos.</p>
+                </div>
+            </div>
+
+            <div class="bento-card flex gap-6 items-start">
+                <div class="tag-icon bg-info">ℹ️</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Individuelle Hinweise</h3>
+                    <p class="text-slate-400 text-sm">Zusätzliche, eventspezifische Informationen werden direkt in der Event-Übersicht unter diesem Symbol angezeigt.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="mt-24 pt-12 border-t border-slate-900 text-center">
+        <p class="text-slate-600 text-[10px] tracking-[0.4em] uppercase">Lars Kölbel Veranstaltungstechnik</p>
+    </footer>
+</main>
+
+</body>
+</html>
