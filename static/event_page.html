@@ -278,13 +278,32 @@
             container.innerHTML = "";
             data.sections.sections.forEach(s => {
                 const div = document.createElement('div');
-                div.className = "bento-card overflow-hidden !p-0";
-                div.innerHTML = `
-                        ${s.image && s.image.length > 50 ? `<img src="${s.image}" class="w-full h-80 object-cover opacity-90">` : ''}
+                const hasImage = s.image && s.image.length > 50;
+                const isLeft = s.show_image_on_left === true;
+                const isRight = s.show_image_on_right === true;
+
+                if (hasImage && (isLeft || isRight)) {
+                    // Flex-Layout für Side-by-Side (links oder rechts)
+                    // row-reverse sorgt dafür, dass das Bild rechts steht auf Desktop
+                    div.className = `bento-card flex flex-col md:flex-row gap-8 items-center ${isRight ? 'md:flex-row-reverse' : ''}`;
+                    div.innerHTML = `
+                        <div class="w-40 h-40 md:w-52 md:h-52 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-2xl">
+                            <img src="${s.image}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 text-center md:text-left">
+                            ${s.title ? `<h3 class="text-2xl font-extrabold mb-4 text-white">${s.title}</h3>` : ''}
+                            <p class="text-slate-400 font-light leading-relaxed preserve-breaks">${linkify(s.text)}</p>
+                        </div>`;
+                } else {
+                    // Standard-Layout (Bild oben)
+                    div.className = "bento-card overflow-hidden !p-0";
+                    div.innerHTML = `
+                        ${hasImage ? `<img src="${s.image}" class="w-full h-80 object-cover opacity-90">` : ''}
                         <div class="p-8">
                             ${s.title ? `<h3 class="text-2xl font-extrabold mb-4 text-white">${s.title}</h3>` : ''}
                             <p class="text-slate-400 font-light leading-relaxed preserve-breaks">${linkify(s.text)}</p>
                         </div>`;
+                }
                 container.appendChild(div);
             });
         }
@@ -294,7 +313,6 @@
             document.getElementById('location-name').innerText = data.location.location_name;
             document.getElementById('location-address').innerText = data.location.location_address;
 
-            // KORREKTUR HIER: Template Literal Syntax korrigiert ($ statt 0)
             document.getElementById('google-maps-btn').onclick = () => {
                 const query = encodeURIComponent(`${data.location.location_name} ${data.location.location_address}`);
                 window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
