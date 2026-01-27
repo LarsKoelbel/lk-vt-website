@@ -26,6 +26,13 @@
         .content-link:hover { opacity: 0.7; }
         .info-label { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
         .warn-label { border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); color: #fca5a5; }
+
+        /* Action Bar Styling */
+        .action-bar { display: flex; gap: 12px; margin-top: 24px; }
+        .share-pill { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 10px 20px; border-radius: 14px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+        .share-pill:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .share-pill svg { width: 18px; height: 18px; opacity: 0.8; }
+        .share-pill.active { background: #10b981; border-color: #059669; }
     </style>
 </head>
 <body class="pb-24">
@@ -35,7 +42,19 @@
     <div class="absolute inset-0 hero-overlay"></div>
     <div class="relative max-w-7xl mx-auto w-full px-6 pb-20">
         <div id="event-dates-summary" class="flex flex-wrap gap-3 mb-6"></div>
-        <h1 id="event-title" class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.9] mb-4 text-white">Lade Event...</h1>
+        <h1 id="event-title" class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.9] text-white">Lade Event...</h1>
+
+        <div class="action-bar">
+            <button id="btn-share" class="share-pill">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                <span>Teilen</span>
+            </button>
+            <button id="btn-copy" class="share-pill">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span id="copy-text">Link kopieren</span>
+            </button>
+        </div>
+
         <div id="preview-header-info" class="hidden mt-8">
             <div class="inline-block px-4 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-bold uppercase tracking-widest">In Kürze verfügbar</div>
         </div>
@@ -104,7 +123,7 @@
             </section>
 
             <section id="contact-card" class="bento-card hidden">
-                <h3 class="text-xs font-bold mb-6 text-slate-500 uppercase tracking-[0.2em]">Ansprechpartnerin</h3>
+                <h3 class="text-xs font-bold mb-6 text-slate-500 uppercase tracking-[0.2em]">Ansprechpartner</h3>
                 <div class="space-y-1">
                     <p id="contact-name" class="font-bold text-white"></p>
                     <a id="contact-email" href="" class="text-blue-500 text-sm hover:underline block"></a>
@@ -130,11 +149,36 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    let globalEventData = null;
+
     function linkify(text) {
         if (!text) return "";
         const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
         return text.replace(urlPattern, '<a href="$1" target="_blank" class="content-link">$1</a>');
     }
+
+    // --- Share & Copy Logic ---
+    document.getElementById('btn-share').addEventListener('click', async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: globalEventData?.title || "Event", url: window.location.href });
+            } catch (err) {}
+        }
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', async function() {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            const textSpan = document.getElementById('copy-text');
+            const originalText = textSpan.innerText;
+            this.classList.add('active');
+            textSpan.innerText = "Kopiert!";
+            setTimeout(() => {
+                this.classList.remove('active');
+                textSpan.innerText = originalText;
+            }, 2000);
+        } catch (err) {}
+    });
 
     function redirectToCalendar(title, dateStr, startStr, endStr, location) {
         const dateParts = dateStr.split('.');
@@ -226,12 +270,12 @@
                 body: JSON.stringify({ event_id: eventId })
             });
             const data = await response.json();
+            globalEventData = data;
 
             if (!response.ok) {
                 document.getElementById('event-details-grid').classList.add('hidden');
                 document.getElementById('event-title').innerText = "Fehler";
                 document.getElementById('error-box').classList.remove('hidden');
-                document.getElementById('error-message').innerText = data.message || "Event konnte nicht geladen werden.";
                 return;
             }
 
