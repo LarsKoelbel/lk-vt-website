@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event-Admin | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { background-color: #f1f5f9; color: #334155; font-family: 'Inter', sans-serif; }
+        .admin-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.2s; border: 1px solid #e2e8f0; }
+        .admin-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        .help-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
+        .date-chip { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600; color: #64748b; }
+
+        #qr-modal, #delete-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 2.5rem; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; }
+
+        .action-btn { transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.75rem; font-weight: 700; padding: 0.5rem 1rem; border-radius: 8px; }
+        .dl-btn { background: #f1f5f9; color: #475569; padding: 0.6rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; flex: 1; }
+
+        .explanation-grid { display: grid; grid-template-cols: auto 1fr; gap: 0.75rem 1.5rem; margin-top: 1rem; font-size: 0.85rem; }
+        .explanation-key { font-weight: 800; color: #1e40af; min-width: 100px; }
+
+        /* Delete Specific Styles */
+        .btn-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fecaca; }
+        .confirm-input { width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin-top: 1rem; }
+    </style>
+</head>
+<body class="py-12 px-4">
+
+<div id="delete-modal">
+    <div class="modal-content">
+        <div id="delete-step-1">
+            <div class="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 class="font-black text-xl text-slate-900 mb-2">Event löschen?</h3>
+            <p class="text-slate-500 text-sm mb-6">Das Löschen ist endgültig. Es gibt keine Backups und die Daten können nicht wiederhergestellt werden.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDelete()" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold">Abbrechen</button>
+                <button onclick="showDeleteStep(2)" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold">Verstanden</button>
+            </div>
+        </div>
+        <div id="delete-step-2" class="hidden text-left">
+            <h3 class="font-black text-lg text-slate-900 mb-2">Sicherheitsabfrage</h3>
+            <p class="text-slate-500 text-xs mb-4">Bitte gib zur Bestätigung folgende Phrase ein:</p>
+            <div id="target-phrase" class="bg-slate-100 p-2 rounded font-mono text-xs font-bold text-center select-all"></div>
+            <input type="text" id="confirm-phrase-input" class="confirm-input" placeholder="Phrase hier eingeben...">
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeDelete()" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold text-sm">Abbrechen</button>
+                <button onclick="validatePhrase()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">Bestätigen</button>
+            </div>
+        </div>
+        <div id="delete-step-3" class="hidden">
+            <div class="text-red-600 text-5xl mb-4">🛑</div>
+            <h3 class="font-black text-xl text-slate-900 mb-2">Letzte Chance</h3>
+            <p class="text-slate-500 text-sm mb-6">Möchtest du dieses Event wirklich unwiderruflich aus der Datenbank entfernen?</p>
+            <div class="flex gap-3">
+                <button onclick="closeDelete()" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold">Nein!</button>
+                <button onclick="executeDelete()" class="flex-1 py-3 bg-red-700 text-white rounded-xl font-bold">JA, LÖSCHEN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="qr-modal" onclick="closeQr()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-xl text-slate-900">QR-Code Export</h3>
+            <button onclick="closeQr()" class="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+        <div id="qrcode-canvas" class="flex justify-center p-4 bg-white border rounded-xl mb-6 shadow-inner"></div>
+        <p id="qr-url-text" class="text-[10px] text-slate-400 font-mono mb-6 truncate px-4"></p>
+        <div class="flex gap-2">
+            <button onclick="downloadQR('png')" class="dl-btn">🖼️ PNG</button>
+            <button onclick="downloadQR('svg')" class="dl-btn">📐 SVG</button>
+        </div>
+        <button onclick="closeQr()" class="w-full mt-8 bg-slate-900 text-white py-3 rounded-xl font-bold text-sm">Schließen</button>
+    </div>
+</div>
+
+<div class="max-w-6xl mx-auto">
+    <header class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+        <div>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight">Admin <span class="text-blue-600">Dashboard</span></h1>
+            <p class="text-slate-500 font-medium italic">Database Interface v3.8</p>
+        </div>
+        <a href="/veranstaltungen" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-purple-200 transition-all flex items-center gap-2">
+            Zur öffentlichen Übersicht
+        </a>
+        <a href="/event-creation-tool" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all flex items-center gap-2">
+            <span class="text-2xl leading-none">+</span> Neues Event erstellen
+        </a>
+    </header>
+
+    <div class="help-box border border-blue-100 shadow-sm">
+        <h3 class="font-black text-blue-800 mb-2 uppercase text-xs tracking-[0.2em]">Dokumentation: Administrator-Werkzeuge</h3>
+        <p class="text-sm text-blue-700 leading-relaxed mb-4">
+            In dieser Übersicht verwaltest du alle Event-Inhalte. Hier ist eine Erläuterung der verfügbaren Aktionen für jeden Datenbank-Eintrag:
+        </p>
+
+        <div class="explanation-grid border-t border-blue-200 pt-4">
+            <div class="explanation-key">👁️ Ansehen</div>
+            <div class="text-blue-900/80">Öffnet die öffentliche Event-Seite auf <b>lk-vt.de</b> in einem neuen Tab. Nutze dies zur finalen Kontrolle der Darstellung.</div>
+
+            <div class="explanation-key">🔗 Link</div>
+            <div class="text-blue-900/80">Kopiert die direkte URL zum Event in deine Zwischenablage. Perfekt zum schnellen Teilen in E-Mails oder WhatsApp.</div>
+
+            <div class="explanation-key">📱 QR-Code</div>
+            <div class="text-blue-900/80">Generiert einen individuellen QR-Code. <b>PNG</b> eignet sich für digitale Medien, <b>SVG</b> ist verlustfrei skalierbar für professionellen Druck (Plakate/Flyer).</div>
+
+            <div class="explanation-key">✏️ Bearbeiten</div>
+            <div class="text-blue-900/80">Öffnet den <b>Schritt-für-Schritt Editor</b>. Hier kannst du alle Texte, Bilder, Teilnehmer und Ticket-Links jederzeit anpassen.</div>
+        </div>
+    </div>
+
+    <div id="event-list" class="space-y-4">
+        <div id="loader" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-slate-400 font-bold italic">Lade Datenbank-Einträge...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_PUBLIC_URL = "https://lk-vt.de/events?event=";
+    let currentTitle = "event";
+    let pendingDeleteId = null;
+    let pendingDeletePhrase = "";
+
+    async function fetchEvents() {
+        const listContainer = document.getElementById('event-list');
+        try {
+            const response = await fetch('/api/events/overview');
+            if (!response.ok) throw new Error('API Error');
+            const data = await response.json();
+            const events = data.event_overview_list || [];
+            listContainer.innerHTML = '';
+
+            if (events.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-200"><p class="text-slate-400 font-bold italic">Keine Events gefunden.</p></div>`;
+                return;
+            }
+
+            events.forEach(event => {
+                const eventUrl = `${BASE_PUBLIC_URL}${event.id}`;
+                const card = document.createElement('div');
+                card.className = 'admin-card p-5';
+                card.innerHTML = `
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                            <div class="flex items-center gap-4">
+                                <img src="${event.main_image_source || 'https://via.placeholder.com/150'}" class="h-14 w-14 rounded-lg object-cover border border-slate-200 shadow-sm">
+                                <div>
+                                    <h2 class="font-extrabold text-slate-800 leading-tight">${event.title || 'Unbenannt'}</h2>
+                                    <div class="flex items-center gap-3 mt-1 text-[10px]">
+                                        <span class="font-bold text-blue-500 uppercase">${event.artist?.name || 'Artist'}</span>
+                                        <span class="text-slate-300">|</span>
+                                        <span class="font-mono text-slate-400">ID: ${event.id}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="${eventUrl}" target="_blank" class="action-btn bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200">👁️ Ansehen</a>
+                                <button onclick="copyToClipboard('${eventUrl}', this)" class="action-btn bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200">🔗 Link</button>
+                                <button onclick="generateQr('${eventUrl}', '${event.title}')" class="action-btn bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200">📱 QR-Code</button>
+                                <a href="/event-creation-tool?edit_event=${event.id}" class="action-btn bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 ml-2">Bearbeiten</a>
+                                <button onclick="startDeleteProcess('${event.id}', '${event.title || 'event'}')" class="action-btn btn-danger ml-2">🗑️ Löschen</button>
+                            </div>
+                        </div>
+                    `;
+                listContainer.appendChild(card);
+            });
+        } catch (error) {
+            listContainer.innerHTML = `<div class="p-8 bg-red-50 text-red-700 text-center rounded-2xl font-bold">Verbindungsfehler zur API.</div>`;
+        }
+    }
+
+    // DELETE LOGIC
+    function startDeleteProcess(id, title) {
+        pendingDeleteId = id;
+        pendingDeletePhrase = `/delete/${title.replace(/\s+/g, '_').toLowerCase()}`;
+        document.getElementById('target-phrase').innerText = pendingDeletePhrase;
+        document.getElementById('confirm-phrase-input').value = "";
+        showDeleteStep(1);
+        document.getElementById('delete-modal').style.display = 'flex';
+    }
+
+    function showDeleteStep(step) {
+        document.getElementById('delete-step-1').classList.add('hidden');
+        document.getElementById('delete-step-2').classList.add('hidden');
+        document.getElementById('delete-step-3').classList.add('hidden');
+        document.getElementById(`delete-step-${step}`).classList.remove('hidden');
+    }
+
+    function validatePhrase() {
+        const input = document.getElementById('confirm-phrase-input').value;
+        if (input === pendingDeletePhrase) {
+            showDeleteStep(3);
+        } else {
+            alert("Falsche Phrase! Löschvorgang abgebrochen.");
+            closeDelete();
+        }
+    }
+
+    async function executeDelete() {
+        try {
+            const response = await fetch('/api/events/drop-event-data-complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: parseInt(pendingDeleteId) })
+            });
+            const result = await response.json();
+            if (result['delete-success']) {
+                closeDelete();
+                fetchEvents();
+            } else {
+                alert("Fehler beim Löschen auf Server-Seite.");
+            }
+        } catch (e) {
+            alert("Netzwerkfehler beim Löschen.");
+        }
+    }
+
+    function closeDelete() {
+        document.getElementById('delete-modal').style.display = 'none';
+        pendingDeleteId = null;
+    }
+
+    function copyToClipboard(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "✅ Kopiert";
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        });
+    }
+
+    function generateQr(url, title) {
+        const container = document.getElementById('qrcode-canvas');
+        const urlText = document.getElementById('qr-url-text');
+        container.innerHTML = '';
+        urlText.innerText = url;
+        currentTitle = title || "event";
+        new QRCode(container, { text: url, width: 256, height: 256, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+        document.getElementById('qr-modal').style.display = 'flex';
+    }
+
+    function downloadQR(format) {
+        const canvas = document.querySelector('#qrcode-canvas canvas');
+        const fileName = `QR_${currentTitle.replace(/\s+/g, '_')}`;
+        const link = document.createElement('a');
+        if (format === 'png') {
+            link.download = `${fileName}.png`;
+            link.href = canvas.toDataURL("image/png");
+        } else {
+            const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><image width="256" height="256" href="${canvas.toDataURL("image/png")}"/></svg>`;
+            link.download = `${fileName}.svg`;
+            link.href = URL.createObjectURL(new Blob([svgData], {type: "image/svg+xml"}));
+        }
+        link.click();
+    }
+
+    function closeQr() { document.getElementById('qr-modal').style.display = 'none'; }
+    window.addEventListener('DOMContentLoaded', fetchEvents);
+</script>
+</body>
+</html>

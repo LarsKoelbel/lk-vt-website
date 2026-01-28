@@ -1,3 +1,6 @@
+from cgitb import handler
+from time import process_time_ns
+
 from flask import Flask, send_from_directory, request, Response, jsonify
 from pymongo import MongoClient
 from datetime import datetime
@@ -7,8 +10,8 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Simple credentials
-USERNAME = "admin"
-PASSWORD = "123456"
+USERNAME = "musicadmin"
+PASSWORD = "ionlyloveyouforyourbody"
 
 # MongoDB Verbindung
 client = MongoClient("mongodb://root:1kblHc616MFcMZadsYU0lBy2CoaGAulo89lCsroCv0ca6Kst24@192.168.178.180:27017/?authSource=admin")
@@ -61,12 +64,22 @@ def events():
 def overview():
     return send_from_directory('static', 'event_overview_page.html')
 
+@app.route('/event-creation-tool')
+@requires_auth
+def event_creation_tool():
+    return send_from_directory('static', 'event_creation_tool.html')
+
+@app.route('/event-admin-view')
+@requires_auth
+def event_admin_view():
+    return send_from_directory('static', 'event_admin_page.html')
+
 # Event API
 @app.route('/api/events', methods=['POST'])
 def get_event():
     data = request.json
     event_id_raw = data.get('event_id')
-
+    if event_id_raw is None: event_id_raw = data.get('id')
     if not event_id_raw:
         return jsonify({"error": "Keine Event ID angegeben"}), 400
 
@@ -147,6 +160,78 @@ def get_event_participants():
 
     except Exception as e:
         app.logger.error(f"Error in participants: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route('/api/upload/push-event', methods=['POST'])
+@requires_auth
+def upload_push_event():
+    try:
+        # Falls der Content-Type nicht exakt application/json ist,
+        # könnte Flask hier scheitern. silent=True verhindert Abstürze.
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({"error": "Invalid JSON"}), 400
+
+        push_type = data.get('upload-type')
+        if push_type == 'event-main':
+            handler = collection
+        elif push_type == 'event-info':
+            handler = client['events']['warnings_and_info']
+        elif push_type == 'event-participants':
+            handler = client['events']['participants']
+        else:
+            return jsonify({"error": "Unknown upload type"}), 404
+
+        payload = data.get('payload')
+
+        if payload is None:
+            return jsonify({"error": "No payload in upload"}), 404
+
+        payload['id'] = int(payload['id'])
+
+        handler.replace_one(
+            {'id': payload['id']},
+            payload,
+            upsert=True
+        )
+
+        return jsonify({"upload-success": True}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in warnings_and_info: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route('/api/events/drop-event-data-complete', methods=['POST'])
+@requires_auth
+def drop_event_complete():
+    try:
+        # Falls der Content-Type nicht exakt application/json ist,
+        # könnte Flask hier scheitern. silent=True verhindert Abstürze.
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({"error": "Invalid JSON"}), 400
+
+        id = data.get('id')
+        if id is None:
+            return jsonify({"error": "No id found"}), 404
+
+        id = int(id)
+
+        h = collection
+        h.delete_one({"id": id})
+
+        h = client['events']['warnings_and_info']
+        h.delete_one({"id": id})
+
+        h = client['events']['participants']
+        h.delete_one({"id": id})
+
+        return jsonify({"delete-success": True}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in warnings_and_info: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route('/api/events/overview', methods=['GET'])

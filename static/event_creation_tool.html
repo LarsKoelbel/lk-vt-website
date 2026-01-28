@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event-Manager | Professional Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap');
+        body { background-color: #f1f5f9; color: #334155; font-family: 'Inter', sans-serif; line-height: 1.6; }
+        .step-content { display: none; }
+        .step-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-card { background: white; padding: 2.5rem; border-radius: 16px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        label { font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 0.4rem; display: block; }
+
+        input, textarea, select { border: 2px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; width: 100%; transition: all 0.2s; background: #f8fafc; }
+        input:focus, textarea:focus { border-color: #3b82f6; background: white; outline: none; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+
+        .help-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 1.25rem; margin-bottom: 2rem; border-radius: 8px; }
+        .placeholder-box { background: #f8fafc; border: 2px dashed #cbd5e1; padding: 1.25rem; margin-bottom: 2rem; border-radius: 8px; text-align: left; }
+        .help-title { color: #1e40af; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px; }
+
+        .explanation-text { font-size: 0.85rem; color: #1e40af; line-height: 1.5; }
+        .mini-hint { font-size: 0.7rem; color: #64748b; margin-top: 0.25rem; font-style: italic; }
+
+        .img-toggle-group { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 8px; margin-bottom: 8px; width: fit-content; }
+        .img-toggle-group button { padding: 4px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; transition: all 0.2s; }
+        .img-toggle-group button.active { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: #2563eb; }
+
+        .btn-primary { background: #2563eb; color: white; padding: 1rem 2rem; border-radius: 10px; font-weight: 700; transition: transform 0.2s, background 0.2s; }
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-secondary { background: #f1f5f9; color: #475569; padding: 1rem 2rem; border-radius: 10px; font-weight: 700; }
+
+        .btn-delete { background: #fee2e2; color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+
+        .checkbox-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; }
+        .checkbox-card input { width: 1.2rem; height: 1.2rem; cursor: pointer; }
+        .checkbox-card span { font-size: 0.85rem; font-weight: 600; }
+
+        #loader-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; align-items: center; justify-content: center; z-index: 100; flex-direction: column; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; }
+        .modal-box { background: white; border-radius: 20px; width: 100%; max-width: 450px; padding: 2.5rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: modalIn 0.3s ease-out; }
+    </style>
+</head>
+<body class="py-12 px-4">
+
+<div id="custom-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div id="modal-icon" class="text-6xl mb-4"></div>
+        <h3 id="modal-title" class="text-2xl font-black mb-2 text-slate-900"></h3>
+        <p id="modal-desc" class="text-slate-500 mb-8"></p>
+        <div id="modal-footer" class="flex gap-3"></div>
+    </div>
+</div>
+
+<div id="loader-overlay">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+    <p id="loader-text" class="font-bold text-blue-600 italic">Daten werden verarbeitet...</p>
+</div>
+
+<div class="max-w-3xl mx-auto">
+    <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 sticky top-0 bg-slate-50/90 backdrop-blur py-4 z-50">
+        <div class="text-left">
+            <h1 class="text-3xl font-black text-slate-900">Event <span class="text-blue-600">Engine</span></h1>
+            <p class="text-slate-500 font-medium italic text-xs uppercase tracking-widest">Database Interface v4.5</p>
+        </div>
+        <div id="global-nav" class="hidden">
+            <button onclick="confirmExit()" class="bg-white border-2 border-red-100 text-red-500 px-4 py-2 rounded-lg font-bold text-xs uppercase hover:bg-red-50 transition-colors shadow-sm">
+                ✕ Abbrechen
+            </button>
+        </div>
+    </header>
+
+    <div id="step-0" class="step-content active">
+        <div class="form-card text-center">
+            <div class="mb-6 text-6xl">🚀</div>
+            <h2 class="text-2xl font-bold mb-4">Starten wir mit dem Event</h2>
+            <p class="text-slate-600 mb-8">Dieser Assistent führt dich durch alle notwendigen Felder. Deine Daten werden am Ende direkt an die API gesendet.</p>
+
+            <div class="placeholder-box">
+                <div class="text-slate-400 font-black text-xs uppercase tracking-widest mb-2">Event erstellen/ bearbeiten in mehreren Schritten</div>
+                <p class="text-slate-400 italic text-sm">Der Editor führt dich durch die einzelnen Schritte. Nur der erste ist Pflicht, alle anderen sind optional. Durch das Klicken des Buttons "Für dieses Event nicht anlegen" kannst du
+                bestimmte Abschnitte überspringen. Die entsprechenden Funktionen werden auf der Event-Page dann nicht angezeigt/ deaktiviert. Die Funktionen können später durch Bearbeiten des Termins wieder aktiviert werden.</p>
+                <div class="text-slate-400 font-black text-xs uppercase tracking-widest mb-2">Pflichtfelder</div>
+                <p class="text-slate-400 italic text-sm">Das einzige Pflichtfeld ist der Event-Title. Alle anderen Angaben können lehr gelassen werden und werden dann auf der Event-Page nicht angezeigt. Die Felder können jederzeit durch Bearbeiten des Termins
+                wieder befüllt werden.</p>
+            </div>
+
+            <button onclick="nextStep(1)" class="btn-primary w-full shadow-lg">Editor öffnen</button>
+        </div>
+    </div>
+
+    <div id="step-1" class="step-content">
+        <div class="form-card">
+            <div class="help-box">
+                <div class="help-title">ℹ️ Grundkonfiguration</div>
+                <p class="explanation-text">Hier legst du die Basisdaten fest. Das <b>Vorschau-Feld</b> steuert, ob das Event bereits öffentlich sichtbar ist (true/false) oder zu einem bestimmten Datum automatisch freigeschaltet wird.</p>
+            </div>
+
+            <div class="flex justify-between items-start mb-6">
+                <h2 class="text-2xl font-bold">Schritt 1: Stammdaten</h2>
+                <div class="text-right">
+                    <label>System ID</label>
+                    <input type="text" id="main-id-display" readonly class="bg-slate-100 font-mono text-[9px] py-1 h-auto w-64 text-center border-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label>Vorschau-Modus (is_preview)</label>
+                    <input type="text" id="main-is-preview" placeholder="false">
+                    <p class="mini-hint">'true', 'false' oder 'YYYY-MM-DD HH:MM'</p>
+                </div>
+                <div>
+                    <label>Event Titel</label>
+                    <input type="text" id="main-title" placeholder="z.B. Sommerkonzert 2026">
+                </div>
+            </div>
+
+            <div class="field-wrap mb-8">
+                <label>Kurzbeschreibung (Main)</label>
+                <textarea id="main-description" rows="3" placeholder="Zusammenfassung für die Event-Karte..."></textarea>
+            </div>
+
+            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100 mb-8">
+                <label class="text-blue-800">Hauptbild (Cover)</label>
+                <div class="img-toggle-group">
+                    <button onclick="setImgMode('main', 'file')" id="btn-main-file">Upload</button>
+                    <button onclick="setImgMode('main', 'url')" class="active" id="btn-main-url">URL</button>
+                </div>
+                <input type="file" id="main-file-input" class="hidden">
+                <input type="url" id="main-url-input" class="text-sm" placeholder="Bild-URL">
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 mb-8">
+                <h3 class="font-bold text-sm uppercase text-slate-500 mb-4">Artist Information</h3>
+                <div class="mb-4">
+                    <label>Künstler/Band Name</label>
+                    <input type="text" id="artist-name" placeholder="Name">
+                </div>
+                <label>Künstler Bild</label>
+                <div class="img-toggle-group">
+                    <button onclick="setImgMode('artist', 'file')" id="btn-artist-file">Upload</button>
+                    <button onclick="setImgMode('artist', 'url')" class="active" id="btn-artist-url">URL</button>
+                </div>
+                <input type="file" id="artist-file-input" class="hidden">
+                <input type="url" id="artist-url-input" class="text-sm" placeholder="URL zum Artist-Bild">
+            </div>
+
+            <h3 class="font-bold text-sm uppercase text-slate-400 mb-4">Kontaktperson</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div><label>Name</label><input type="text" id="con-name"></div>
+                <div><label>E-Mail</label><input type="email" id="con-email"></div>
+            </div>
+
+            <div class="help-box">
+                <div class="help-title">📍 Ort & Termine</div>
+                <p class="explanation-text">Gib die Adresse und die exakten Zeiträume an. Du kannst mehrere Termine für ein Event hinzufügen.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input type="text" id="loc-name" placeholder="Location Name">
+                <input type="text" id="loc-addr" placeholder="Vollständige Adresse">
+                <select id="loc-show-map">
+                    <option value="true">Karte anzeigen</option>
+                    <option value="false">Keine Karte</option>
+                </select>
+                <input type="text" id="loc-coords" placeholder="Breitengrad|Längengrad (z.B. 51.5|10.2)">
+            </div>
+
+            <div id="dates-container" class="space-y-4 mb-4"></div>
+            <button onclick="addDateRow()" class="text-blue-600 font-bold text-sm">+ Weiteren Termin hinzufügen</button>
+
+            <div class="flex justify-end pt-6 border-t mt-8"><button onclick="nextStep(2)" class="btn-primary px-12">Weiter zu Sektionen</button></div>
+        </div>
+    </div>
+
+    <div id="step-2" class="step-content">
+        <div class="form-card">
+            <div class="help-box">
+                <div class="help-title">🖼️ Inhaltsblöcke</div>
+                <p class="explanation-text">Hier gestaltest du die Detailseite. Jeder Block kann ein Bild enthalten, das wahlweise links oder rechts erscheint.</p>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Schritt 2: Inhaltsblöcke</h2>
+            <div id="sections-container" class="space-y-8"></div>
+            <button onclick="addSectionRow()" class="btn-secondary w-full border-2 border-dashed border-slate-300 bg-white mt-6">+ Inhaltsblock hinzufügen</button>
+            <div class="flex justify-between items-center pt-8 border-t mt-8">
+                <button onclick="nextStep(1)" class="text-slate-400 font-bold">Zurück</button>
+                <div class="flex gap-4">
+                    <button onclick="skipSections()" class="text-slate-500 font-bold px-4">Für dieses Event nicht anlegen</button>
+                    <button onclick="nextStep(3)" class="btn-primary">Weiter zu Hinweisen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="step-3" class="step-content">
+        <div class="form-card">
+            <div class="help-box">
+                <div class="help-title">⚠️ Barrierefreiheit & Warnungen</div>
+                <p class="explanation-text">Wichtige Infos für Gäste. Diese Daten werden im Bereich "Info & Sicherheit" gespeichert.</p>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Schritt 3: Hinweise & Sicherheit</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6" id="info-section-group">
+                <label class="checkbox-card"><input type="checkbox" id="info-wheel"> <span>Rollstuhlgerecht</span></label>
+                <label class="checkbox-card"><input type="checkbox" id="info-parking"> <span>Parkplätze vorhanden</span></label>
+                <label class="checkbox-card"><input type="checkbox" id="info-transport"> <span>ÖPNV Anbindung</span></label>
+                <label class="checkbox-card"><input type="checkbox" id="info-food"> <span>Essen & Trinken</span></label>
+            </div>
+            <textarea id="info-other" placeholder="Zusätzliche Infos..." rows="2" class="mb-6"></textarea>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6" id="warn-section-group">
+                <label class="checkbox-card bg-red-50"><input type="checkbox" id="warn-strobe"> <span>Stroboskop</span></label>
+                <label class="checkbox-card bg-red-50"><input type="checkbox" id="warn-haze"> <span>Nebelmaschine</span></label>
+                <label class="checkbox-card bg-red-50"><input type="checkbox" id="warn-loud"> <span>Hohe Lautstärke</span></label>
+            </div>
+            <textarea id="warn-other" placeholder="Sonstige Warnhinweise..." rows="2"></textarea>
+
+            <div class="flex justify-between items-center pt-8 border-t mt-8">
+                <button onclick="nextStep(2)" class="text-slate-400 font-bold">Zurück</button>
+                <div class="flex gap-4">
+                    <button onclick="skipInfo()" class="text-slate-500 font-bold px-4">Für dieses Event nicht anlegen</button>
+                    <button onclick="nextStep(4)" class="btn-primary">Weiter zu Tickets</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="step-4" class="step-content">
+        <div class="form-card">
+            <div class="help-box">
+                <div class="help-title">🎟️ Ticket-Redirects</div>
+                <p class="explanation-text">Steuere, wohin die "Ticket kaufen" Buttons führen.</p>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Schritt 4: Tickets</h2>
+            <label>Verkaufsstatus (is_open)</label>
+            <input type="text" id="tick-is-open" placeholder="true / false / Hinweis" class="mb-4">
+            <div id="tickets-container" class="space-y-6"></div>
+            <button onclick="addTicketRow()" class="btn-secondary w-full border-2 border-dashed border-slate-300 bg-white mt-6">+ Ticket-Kategorie hinzufügen</button>
+            <div class="flex justify-between items-center pt-8 border-t mt-8">
+                <button onclick="nextStep(3)" class="text-slate-400 font-bold">Zurück</button>
+                <div class="flex gap-4"><button onclick="skipTickets()" class="text-slate-500 font-bold px-4">Für dieses Event nicht anlegen</button><button onclick="nextStep(5)" class="btn-primary">Weiter zu Teilnehmern</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="step-5" class="step-content">
+        <div class="form-card">
+            <div class="help-box">
+                <div class="help-title">👥 Beteiligte Personen</div>
+                <p class="explanation-text">Liste hier Teams, Orchester oder Sponsoren auf.</p>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Schritt 5: Teilnehmer</h2>
+            <div id="participants-container" class="space-y-8"></div>
+            <button onclick="addGroupRow()" class="btn-secondary w-full border-2 border-dashed border-slate-300 bg-white mt-6">+ Neue Gruppe hinzufügen</button>
+            <div class="flex justify-between items-center pt-8 border-t mt-8">
+                <button onclick="nextStep(4)" class="text-slate-400 font-bold">Zurück</button>
+                <div class="flex gap-4">
+                    <button onclick="skipParticipants()" class="text-slate-500 font-bold px-4">Für dieses Event nicht anlegen</button>
+                    <button onclick="generateFiles()" class="bg-green-600 text-white px-8 py-4 rounded-xl font-black shadow-lg">Finalisieren & Prüfen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="step-6" class="step-content">
+        <div class="form-card text-center">
+            <h2 class="text-3xl font-black mb-4">Bereit zum Speichern! 🚀</h2>
+            <p class="text-slate-500 mb-8">Alle Daten wurden validiert und sind bereit für den Upload.</p>
+            <button onclick="pushAllToApi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-xl font-black text-xl shadow-xl mb-6">Jetzt in Datenbank übertragen</button>
+            <button onclick="confirmExit()" class="text-slate-400 underline">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let eventId = "";
+    let finalFiles = {};
+
+    function generateLongId() {
+        let result = '';
+        const characters = '0123456789';
+        for (let i = 0; i < 15; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('edit_event');
+        if (editId) {
+            eventId = editId;
+            document.getElementById('main-id-display').value = eventId;
+            showLoader("Daten werden abgerufen...");
+            await preloadEventData(eventId);
+            hideLoader();
+        } else {
+            eventId = generateLongId();
+            document.getElementById('main-id-display').value = eventId;
+            addDateRow();
+        }
+    });
+
+    function showModal(config) {
+        const m = document.getElementById('custom-modal');
+        document.getElementById('modal-icon').innerText = config.icon;
+        document.getElementById('modal-title').innerText = config.title;
+        document.getElementById('modal-desc').innerText = config.desc;
+        const footer = document.getElementById('modal-footer');
+        footer.innerHTML = '';
+        config.buttons.forEach(btn => {
+            const b = document.createElement('button');
+            b.innerText = btn.text;
+            b.className = `flex-1 py-3 rounded-xl font-bold ${btn.class}`;
+            b.onclick = btn.action;
+            footer.appendChild(b);
+        });
+        m.style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('custom-modal').style.display = 'none'; }
+    function confirmExit() {
+        showModal({
+            icon: '⚠️', title: 'Wirklich abbrechen?', desc: 'Ungespeicherte Änderungen gehen verloren.',
+            buttons: [
+                { text: 'Weiterbearbeiten', class: 'bg-slate-100', action: closeModal },
+                { text: 'Ja, Verlassen', class: 'bg-red-500 text-white', action: () => window.location.href = '/event-admin-view' }
+            ]
+        });
+    }
+
+    function showLoader(text) {
+        document.getElementById('loader-text').innerText = text;
+        document.getElementById('loader-overlay').style.display = 'flex';
+    }
+    function hideLoader() { document.getElementById('loader-overlay').style.display = 'none'; }
+
+    async function apiRequest(path, body) {
+        try {
+            const response = await fetch(path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            return response.ok ? response.json() : null;
+        } catch (e) { return null; }
+    }
+
+    async function pushAllToApi() {
+        showLoader("Synchronisierung läuft...");
+        let success = true;
+        const types = [
+            { key: 'main', type: 'event-main' },
+            { key: 'info', type: 'event-info' },
+            { key: 'parts', type: 'event-participants' }
+        ];
+        for(let item of types) {
+            if (finalFiles[item.key]) {
+                const res = await apiRequest('/api/upload/push-event', {
+                    "upload-type": item.type,
+                    "payload": finalFiles[item.key].data
+                });
+                if(!res || res['upload-success'] === false) success = false;
+            }
+        }
+        hideLoader();
+        if(success) {
+            showModal({
+                icon: '✅', title: 'Erfolg!', desc: 'Das Event wurde gespeichert.',
+                buttons: [{ text: 'Dashboard', class: 'bg-blue-600 text-white', action: () => window.location.href = '/event-admin-view' }]
+            });
+        } else {
+            showModal({
+                icon: '❌', title: 'Fehler', desc: 'Die API hat den Upload abgelehnt.',
+                buttons: [{ text: 'Erneut versuchen', class: 'bg-slate-900 text-white', action: closeModal }]
+            });
+        }
+    }
+
+    function addDateRow(d = null) {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-slate-50 border rounded-xl relative group';
+        div.innerHTML = `
+            <button onclick="this.parentElement.remove()" class="btn-delete absolute -top-2 -right-2 hidden group-hover:block">✕</button>
+            <div><label>Datum</label><input type="text" class="d-date" value="${d?.date || ''}"></div>
+            <div><label>Start</label><input type="text" class="d-start" value="${d?.start || ''}"></div>
+            <div><label>Ende</label><input type="text" class="d-end" value="${d?.end || ''}"></div>
+            <div><label>Einlass</label><input type="text" class="d-ent" value="${d?.entrance || ''}"></div>
+            <div><label>Dauer</label><input type="text" class="d-dur" value="${d?.duration || ''}"></div>
+            <div><label>Notiz</label><input type="text" class="d-note" value="${d?.note || ''}"></div>
+        `;
+        document.getElementById('dates-container').appendChild(div);
+    }
+
+    function addSectionRow(s = null) {
+        const id = 'sec-' + Math.random().toString(36).substr(2, 5);
+        const div = document.createElement('div');
+        div.className = 'p-6 bg-white border rounded-2xl space-y-4 relative';
+        div.innerHTML = `
+            <button onclick="this.parentElement.remove()" class="btn-delete absolute top-4 right-4 text-xs">Löschen</button>
+            <input type="text" placeholder="Abschnitt Titel" class="s-title font-bold" value="${s?.title || ''}">
+            <div class="img-toggle-group">
+                <button onclick="setImgMode('${id}', 'file')" id="btn-${id}-file">Upload</button>
+                <button onclick="setImgMode('${id}', 'url')" class="active" id="btn-${id}-url">URL</button>
+            </div>
+            <input type="file" id="${id}-file-input" class="hidden">
+            <input type="url" id="${id}-url-input" class="text-sm" value="${s?.image || ''}">
+            <textarea placeholder="Block-Text..." class="s-text" rows="3">${s?.text || ''}</textarea>
+            <div class="flex gap-4 text-[10px] font-bold">
+                <label><input type="checkbox" class="s-left" ${s?.show_image_on_left ? 'checked' : ''}> Bild links</label>
+                <label><input type="checkbox" class="s-right" ${s?.show_image_on_right ? 'checked' : ''}> Bild rechts</label>
+            </div>
+        `;
+        div.dataset.imgId = id;
+        document.getElementById('sections-container').appendChild(div);
+    }
+
+    function addTicketRow(t = null) {
+        const div = document.createElement('div');
+        div.className = 'p-4 bg-slate-50 border rounded-xl space-y-3 relative group';
+        div.innerHTML = `
+            <button onclick="this.parentElement.remove()" class="btn-delete absolute -top-2 -right-2 hidden group-hover:block">✕</button>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="text" placeholder="Kategorie" class="t-name" value="${t?.ticket_name || ''}">
+                <input type="text" placeholder="Preis" class="t-price" value="${t?.ticket_price || ''}">
+            </div>
+            <input type="url" placeholder="Ticket-Link" class="t-href" value="${t?.ticket_href || ''}">
+            <div class="flex gap-4 text-[10px] font-bold">
+                <label><input type="checkbox" class="t-sold" ${t?.ticket_soled_out ? 'checked' : ''}> Ausverkauft</label>
+                <label><input type="checkbox" class="t-few" ${t?.ticket_fuew_left ? 'checked' : ''}> Wenige</label>
+            </div>
+        `;
+        document.getElementById('tickets-container').appendChild(div);
+    }
+
+    function addGroupRow(g = null) {
+        const div = document.createElement('div');
+        div.className = 'p-6 bg-slate-50 border rounded-2xl relative mb-6';
+        div.innerHTML = `
+            <button onclick="this.parentElement.remove()" class="btn-delete absolute top-4 right-4">Gruppe weg</button>
+            <input type="text" placeholder="Gruppen-Name" class="g-name font-bold mb-4" value="${g?.group_name || ''}">
+            <div class="member-list space-y-4"></div>
+            <button type="button" class="add-member-btn mt-4 text-xs text-blue-600 font-bold">+ Person hinzufügen</button>
+        `;
+        const list = div.querySelector('.member-list');
+        div.querySelector('.add-member-btn').addEventListener('click', () => addMember(list));
+        document.getElementById('participants-container').appendChild(div);
+        if(g?.members) g.members.forEach(m => addMember(list, m));
+    }
+
+    function addMember(container, m = null) {
+        const id = 'mem-' + Math.random().toString(36).substr(2, 5);
+        const div = document.createElement('div');
+        div.className = 'p-4 bg-white border rounded-xl space-y-2 relative';
+        div.innerHTML = `
+            <button onclick="this.parentElement.remove()" class="btn-delete absolute -top-2 -right-2">✕</button>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" placeholder="Name" class="m-name" value="${m?.member_name || ''}">
+                <input type="text" placeholder="Rolle" class="m-role" value="${m?.member_role || ''}">
+            </div>
+            <input type="url" placeholder="Web-Link" class="m-href" value="${m?.member_href || ''}">
+            <div class="img-toggle-group">
+                <button onclick="setImgMode('${id}', 'file')" id="btn-${id}-file">Upload</button>
+                <button onclick="setImgMode('${id}', 'url')" class="active" id="btn-${id}-url">URL</button>
+            </div>
+            <input type="file" id="${id}-file-input" class="hidden">
+            <input type="url" id="${id}-url-input" class="text-xs" value="${m?.member_image_source || ''}">
+        `;
+        div.dataset.imgId = id;
+        container.appendChild(div);
+    }
+
+    function nextStep(s) {
+        document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('step-' + s).classList.add('active');
+        document.getElementById('global-nav').classList.toggle('hidden', s === 0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setImgMode(id, mode) {
+        document.getElementById(id + '-file-input').classList.toggle('hidden', mode !== 'file');
+        document.getElementById(id + '-url-input').classList.toggle('hidden', mode !== 'url');
+        document.getElementById('btn-' + id + '-file').classList.toggle('active', mode === 'file');
+        document.getElementById('btn-' + id + '-url').classList.toggle('active', mode === 'url');
+    }
+
+    async function getImgValue(idPrefix) {
+        const btnUrl = document.getElementById('btn-' + idPrefix + '-url');
+        if(!btnUrl) return null;
+        if(btnUrl.classList.contains('active')) return document.getElementById(idPrefix + '-url-input').value || null;
+        const fileInput = document.getElementById(idPrefix + '-file-input');
+        if(!fileInput?.files[0]) return null;
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(fileInput.files[0]);
+        });
+    }
+
+    async function preloadEventData(id) {
+        const main = await apiRequest('/api/events', {id: id});
+        if (main) {
+            document.getElementById('main-title').value = main.title || '';
+            document.getElementById('main-is-preview').value = main.is_preview;
+            document.getElementById('main-description').value = main.main_description || '';
+            document.getElementById('main-url-input').value = main.main_image || '';
+            if (main.artist) {
+                document.getElementById('artist-name').value = main.artist.name || '';
+                document.getElementById('artist-url-input').value = main.artist.image || '';
+            }
+            if (main.contact) {
+                document.getElementById('con-name').value = main.contact.name || '';
+                document.getElementById('con-email').value = main.contact.email || '';
+            }
+            document.getElementById('dates-container').innerHTML = '';
+            if (main.dates) main.dates.forEach(d => addDateRow(d));
+            if (main.location) {
+                document.getElementById('loc-name').value = main.location.location_name || '';
+                document.getElementById('loc-addr').value = main.location.location_address || '';
+                document.getElementById('loc-show-map').value = String(main.location.show_location_on_map);
+                document.getElementById('loc-coords').value = main.location.loacation_coordinates || '';
+            }
+            if (main.ticket_redirects) {
+                document.getElementById('tick-is-open').value = main.ticket_redirects.is_open || '';
+                document.getElementById('tickets-container').innerHTML = '';
+                if(main.ticket_redirects.redirects) main.ticket_redirects.redirects.forEach(t => addTicketRow(t));
+            }
+            if (main.sections?.sections) {
+                document.getElementById('sections-container').innerHTML = '';
+                main.sections.sections.forEach(s => addSectionRow(s));
+            }
+        }
+        const info = await apiRequest('/api/events/warnings_and_info', {id: id});
+        if (info) {
+            document.getElementById('info-wheel').checked = !!info.info_is_wheelchair_accessible;
+            document.getElementById('info-parking').checked = !!info.info_has_parking;
+            document.getElementById('info-transport').checked = !!info.info_has_public_transportation;
+            document.getElementById('info-food').checked = !!info.info_has_food_and_drinks;
+            document.getElementById('info-other').value = info.info_other || '';
+            document.getElementById('warn-strobe').checked = !!info.warn_strobe_lights;
+            document.getElementById('warn-haze').checked = !!info.warn_haze_machines;
+            document.getElementById('warn-loud').checked = !!info.warn_loud_sounds;
+            document.getElementById('warn-other').value = info.warn_other || '';
+        }
+        const parts = await apiRequest('/api/events/participants', {id: id});
+        if (parts && parts.groups) {
+            document.getElementById('participants-container').innerHTML = '';
+            parts.groups.forEach(g => addGroupRow(g));
+        }
+    }
+
+    async function generateFiles() {
+        showLoader("Zusammenfassung...");
+        const tickets = Array.from(document.querySelectorAll('#tickets-container > div')).map(t => ({
+            ticket_name: t.querySelector('.t-name').value,
+            ticket_price: t.querySelector('.t-price').value,
+            ticket_soled_out: t.querySelector('.t-sold').checked,
+            ticket_fuew_left: t.querySelector('.t-few').checked,
+            ticket_href: t.querySelector('.t-href').value,
+            ticket_location: document.getElementById('loc-name').value,
+            ticket_amount_available: "N/A", ticket_date: ""
+        }));
+
+        const sections = [];
+        for (const div of document.querySelectorAll('#sections-container > div')) {
+            sections.push({
+                title: div.querySelector('.s-title').value || null,
+                image: await getImgValue(div.dataset.imgId),
+                text: div.querySelector('.s-text').value,
+                show_image_on_left: div.querySelector('.s-left').checked,
+                show_image_on_right: div.querySelector('.s-right').checked
+            });
+        }
+
+        const mainData = {
+            id: eventId,
+            is_preview: document.getElementById('main-is-preview').value,
+            title: document.getElementById('main-title').value,
+            main_description: document.getElementById('main-description').value,
+            main_image: await getImgValue('main'),
+            artist: { name: document.getElementById('artist-name').value, image: await getImgValue('artist') },
+            contact: { name: document.getElementById('con-name').value, email: document.getElementById('con-email').value },
+            dates: Array.from(document.querySelectorAll('#dates-container > div')).map(d => ({
+                date: d.querySelector('.d-date').value, start: d.querySelector('.d-start').value,
+                end: d.querySelector('.d-end').value, duration: d.querySelector('.d-dur').value,
+                note: d.querySelector('.d-note').value || null, entrance: d.querySelector('.d-ent').value
+            })),
+            location: {
+                location_name: document.getElementById('loc-name').value, location_address: document.getElementById('loc-addr').value,
+                show_location_on_map: document.getElementById('loc-show-map').value === 'true',
+                loacation_coordinates: document.getElementById('loc-coords').value
+            },
+            ticket_redirects: { show_ticket_redirects: tickets.length > 0, is_open: document.getElementById('tick-is-open').value, redirects: tickets },
+            sections: { show_sections: sections.length > 0, sections: sections }
+        };
+
+        const infoData = {
+            id: eventId,
+            info_is_wheelchair_accessible: document.getElementById('info-wheel').checked,
+            info_has_parking: document.getElementById('info-parking').checked,
+            info_has_public_transportation: document.getElementById('info-transport').checked,
+            info_has_food_and_drinks: document.getElementById('info-food').checked,
+            info_other: document.getElementById('info-other').value || null,
+            warn_strobe_lights: document.getElementById('warn-strobe').checked,
+            warn_haze_machines: document.getElementById('warn-haze').checked,
+            warn_loud_sounds: document.getElementById('warn-loud').checked,
+            warn_other: document.getElementById('warn-other').value || null
+        };
+
+        const participants = { id: eventId, groups: [] };
+        for (const gDiv of document.querySelectorAll('#participants-container > div')) {
+            const group = { group_name: gDiv.querySelector('.g-name').value, members: [] };
+            for (const mDiv of gDiv.querySelectorAll('.member-list > div')) {
+                group.members.push({
+                    member_name: mDiv.querySelector('.m-name').value,
+                    member_role: mDiv.querySelector('.m-role').value || null,
+                    member_href: mDiv.querySelector('.m-href').value || null,
+                    member_image_source: await getImgValue(mDiv.dataset.imgId)
+                });
+            }
+            participants.groups.push(group);
+        }
+
+        finalFiles = {
+            main: { data: mainData },
+            info: { data: infoData },
+            parts: { data: participants }
+        };
+        hideLoader();
+        nextStep(6);
+    }
+
+    function skipSections() { nextStep(3); }
+    function skipInfo() { nextStep(4); }
+    function skipTickets() { nextStep(5); }
+    function skipParticipants() { generateFiles(); }
+
+</script>
+</body>
+</html>
