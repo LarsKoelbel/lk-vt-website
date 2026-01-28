@@ -195,7 +195,7 @@ def upload_push_event():
             payload,
             upsert=True
         )
-        print(f"Upload complete for data {payload}")
+        print(f"Upload complete for type {push_type}")
         return jsonify({"upload-success": True}), 200
 
     except Exception as e:
