@@ -363,9 +363,12 @@
                     "upload-type": item.type,
                     "payload": finalFiles[item.key].data
                 });
-                console.log(res);
                 if(!res || res['upload-success'] === false) success = false;
             }
+
+            const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+            await delay(500);
         }
         hideLoader();
         if(success) {
