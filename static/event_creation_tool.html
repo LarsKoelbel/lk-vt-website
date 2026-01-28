@@ -363,6 +363,7 @@
                     "upload-type": item.type,
                     "payload": finalFiles[item.key].data
                 });
+                console.log(res);
                 if(!res || res['upload-success'] === false) success = false;
             }
         }
