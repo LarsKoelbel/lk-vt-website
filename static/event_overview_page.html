@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programm Übersicht - Lars Kölbel Veranstaltungstechnik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        :root {
+            --bg-dark: #080a0f;
+            --card-bg: #12151c;
+            --text-main: #f8fafc;
+            --border-color: #1e293b;
+            --accent: #3b82f6;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.5;
+            scroll-behavior: smooth;
+        }
+
+        /* Year Separator - Reduced Spaces */
+        .year-divider {
+            position: relative;
+            padding: 1.5rem 0 0.5rem 0; /* Deutlich reduziert */
+            margin-top: 1.5rem;          /* Deutlich reduziert */
+            display: flex;
+            align-items: center;
+        }
+        .year-divider h2 {
+            font-size: clamp(4rem, 15vw, 8rem);
+            font-weight: 900;
+            line-height: 1;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+            letter-spacing: -0.05em;
+        }
+        .year-label-overlay {
+            position: absolute;
+            left: 0;
+            bottom: 1.5rem; /* Angepasst an das reduzierte Padding */
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5em;
+        }
+
+        .month-section { margin-bottom: 3rem; }
+        .month-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(8, 10, 15, 0.95);
+            backdrop-filter: blur(16px);
+            padding: 1.25rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        .event-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .event-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .image-container {
+            position: relative;
+            height: 240px;
+            overflow: hidden;
+        }
+        .event-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .event-card:hover .event-image { transform: scale(1.05); }
+
+        .date-pill-container {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+        .date-badge {
+            background: rgba(8, 10, 15, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+            color: white;
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin-top: 2rem;
+        }
+        .search-input {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            padding-right: 3.5rem;
+            border-radius: 16px;
+            color: white;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+        .reset-search {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .reset-search:hover { opacity: 1; }
+
+        .search-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .action-button {
+            background: var(--text-main);
+            color: var(--bg-dark);
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            text-align: center;
+            width: 100%;
+            display: block;
+        }
+        .action-button:hover { opacity: 0.9; transform: scale(1.02); }
+
+        .skeleton {
+            background: linear-gradient(90deg, #12151c 25%, #1e293b 50%, #12151c 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+
+<header class="max-w-7xl mx-auto mb-12">
+    <p class="text-blue-500 font-bold uppercase tracking-[0.3em] text-xs mb-4">Event-Kalender</p>
+    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter">Programm <span class="text-slate-500 italic">Vorschau</span></h1>
+
+    <div class="search-container">
+        <input type="text" id="event-search" class="search-input" placeholder="Nach Event, Ort oder Datum suchen...">
+        <div id="search-reset" class="reset-search hidden">✕</div>
+    </div>
+</header>
+
+<main id="main-content" class="max-w-7xl mx-auto">
+    <div id="search-status" class="hidden">
+        <div class="search-indicator">
+            <span class="text-sm font-medium text-blue-400">Aktive Suche</span>
+            <button id="show-all-btn" class="text-xs font-bold uppercase tracking-widest bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">Alle anzeigen</button>
+        </div>
+    </div>
+
+    <div id="loader" class="bento-grid">
+        <div class="event-card h-[400px] skeleton"></div>
+        <div class="event-card h-[400px] skeleton"></div>
+    </div>
+
+    <div id="content-area" class="hidden"></div>
+
+    <div id="no-events" class="hidden text-center py-24 bg-[#12151c] rounded-[32px] border border-dashed border-slate-800">
+        <p class="text-slate-500 text-lg">Keine passenden Events gefunden.</p>
+    </div>
+</main>
+
+<footer class="max-w-7xl mx-auto mt-32 py-16 text-center border-t border-slate-900">
+    <p class="text-slate-600 text-[10px] tracking-[0.4em] uppercase">© 2026 - Lars Kölbel Veranstaltungstechnik</p>
+</footer>
+
+<script>
+    const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+    let allEvents = [];
+
+    function parseGermanDate(dateStr) {
+        const parts = dateStr.split('.');
+        if(parts.length !== 3) return new Date(0);
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+
+    async function init() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchInput = document.getElementById('event-search');
+        const resetBtn = document.getElementById('search-reset');
+        const showAllBtn = document.getElementById('show-all-btn');
+
+        try {
+            const response = await fetch('/api/events/overview');
+            const data = await response.json();
+            allEvents = (data.event_overview_list || []).filter(e => e.dates && e.dates.length > 0);
+
+            const initialSearch = urlParams.get('search');
+            if(initialSearch) {
+                searchInput.value = initialSearch;
+                resetBtn.classList.remove('hidden');
+            }
+
+            render(searchInput.value);
+
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value;
+                resetBtn.classList.toggle('hidden', !term);
+                render(term);
+            });
+
+            const clearAll = () => {
+                searchInput.value = '';
+                resetBtn.classList.add('hidden');
+                render('');
+            };
+
+            resetBtn.addEventListener('click', clearAll);
+            showAllBtn.addEventListener('click', clearAll);
+
+        } catch (error) {
+            console.error("API Error:", error);
+            document.getElementById('loader').innerHTML = '<p class="text-red-500 text-center py-20">Service aktuell nicht erreichbar.</p>';
+        }
+    }
+
+    function render(searchTerm = '') {
+        const contentArea = document.getElementById('content-area');
+        const loader = document.getElementById('loader');
+        const noEvents = document.getElementById('no-events');
+        const searchStatus = document.getElementById('search-status');
+
+        loader.classList.add('hidden');
+        contentArea.innerHTML = '';
+
+        const term = searchTerm.toLowerCase().trim();
+        searchStatus.classList.toggle('hidden', !term);
+
+        const filtered = allEvents.filter(e => {
+            const matchTitle = e.title.toLowerCase().includes(term);
+            const matchArtist = e.artist.name.toLowerCase().includes(term);
+            const matchLocation = e.location.location_name.toLowerCase().includes(term);
+            const matchDate = e.dates.some(d => d.date.includes(term));
+            return matchTitle || matchArtist || matchLocation || matchDate;
+        });
+
+        if (filtered.length === 0) {
+            contentArea.classList.add('hidden');
+            noEvents.classList.remove('hidden');
+            return;
+        }
+
+        noEvents.classList.add('hidden');
+        contentArea.classList.remove('hidden');
+
+        filtered.sort((a, b) => parseGermanDate(a.dates[0].date) - parseGermanDate(b.dates[0].date));
+
+        const structure = {};
+        filtered.forEach(event => {
+            const dateObj = parseGermanDate(event.dates[0].date);
+            const year = dateObj.getFullYear();
+            const month = dateObj.getMonth();
+            if (!structure[year]) structure[year] = {};
+            if (!structure[year][month]) structure[year][month] = [];
+            structure[year][month].push(event);
+        });
+
+        Object.keys(structure).sort().forEach(year => {
+            const yearDiv = document.createElement('div');
+            yearDiv.className = 'year-divider';
+            yearDiv.innerHTML = `<h2>${year}</h2><div class="year-label-overlay">Saison</div>`;
+            contentArea.appendChild(yearDiv);
+
+            Object.keys(structure[year]).sort((a,b) => a-b).forEach(month => {
+                const monthSection = document.createElement('section');
+                monthSection.className = 'month-section';
+                monthSection.innerHTML = `
+                    <div class="month-header">
+                        <h3 class="text-xl font-black uppercase tracking-widest text-white">${monthNames[month]}</h3>
+                        <span class="text-[10px] font-bold text-slate-600 tracking-widest uppercase">${year}</span>
+                    </div>
+                    <div class="bento-grid"></div>
+                `;
+
+                const grid = monthSection.querySelector('.bento-grid');
+                structure[year][month].forEach(event => {
+                    const card = document.createElement('div');
+                    card.className = 'event-card';
+                    const dateBadgesHtml = event.dates.map(d => `<div class="date-badge">${d.date}</div>`).join('');
+                    const infoTextHtml = event.overview_info ? `<p class="text-slate-400 text-xs mt-3 line-clamp-2 italic">${event.overview_info}</p>` : '';
+
+                    card.innerHTML = `
+                        <div class="image-container">
+                            <img src="${event.main_image_source}" class="event-image" alt="">
+                            <div class="date-pill-container">${dateBadgesHtml}</div>
+                        </div>
+                        <div class="p-8 flex flex-col flex-grow">
+                            <div class="mb-6">
+                                <p class="text-blue-500 text-[10px] font-black uppercase tracking-widest mb-2">${event.artist.name}</p>
+                                <h4 class="text-2xl font-bold text-white leading-tight mb-1">${event.title}</h4>
+                                <p class="text-slate-500 text-xs flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    ${event.location.location_name}
+                                </p>
+                                ${infoTextHtml}
+                            </div>
+                            <div class="mt-auto"><a href="/events?event=${event.id}" class="action-button">Zum Event</a></div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+                contentArea.appendChild(monthSection);
+            });
+        });
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

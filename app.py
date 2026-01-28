@@ -57,6 +57,10 @@ def events_warnings_and_info():
 def events():
     return send_from_directory('static', 'event_page.html')
 
+@app.route('/veranstaltungen')
+def overview():
+    return send_from_directory('static', 'event_overview_page.html')
+
 # Event API
 @app.route('/api/events', methods=['POST'])
 def get_event():
@@ -143,6 +147,34 @@ def get_event_participants():
 
     except Exception as e:
         app.logger.error(f"Error in participants: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route('/api/events/overview', methods=['GET'])
+def get_event_overview():
+    try:
+
+        result = {
+            "event_overview_list": []
+        }
+
+        for doc in collection.find():
+            id = doc.get('id')
+            if id is None or len(str(id)) < 5: continue
+            element = {
+                "id": doc.get('id'),
+                "title": doc.get('title'),
+                "main_image_source": doc.get('main_image'),
+                "dates": doc.get('dates'),
+                'artist': doc.get('artist'),
+                'location': doc.get('location'),
+                'overview_info': doc.get('overview_info')
+            }
+            result['event_overview_list'].append(element)
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in event overview: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route('/gear')
