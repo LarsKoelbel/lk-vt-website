@@ -558,7 +558,7 @@
             if (main.dates) main.dates.forEach(d => addDateRow(d));
             if (main.location) {
                 document.getElementById('loc-name').value = main.location.location_name || '';
-                document.getElementById('loc-address').value = main.location.location_address || '';
+                document.getElementById('loc-addr').value = main.location.location_address || '';
                 document.getElementById('loc-show-map').value = String(main.location.show_location_on_map);
                 document.getElementById('loc-coords').value = main.location.loacation_coordinates || '';
             }
@@ -573,17 +573,35 @@
             }
         }
 
-        const info = await apiRequest('/api/events/info', {id: id});
+        const info = await apiRequest('/api/events/warnings_and_info', {id: id});
+        console.log(info);
         if (info) {
-            document.getElementById('info-wheel').checked = info.info_security?.wheelchair_accessible || false;
-            document.getElementById('info-parking').checked = info.info_security?.parking_available || false;
-            document.getElementById('info-transport').checked = info.info_security?.public_transport || false;
-            document.getElementById('info-food').checked = info.info_security?.food_drinks || false;
-            document.getElementById('info-other').value = info.info_security?.other_info || '';
-            document.getElementById('warn-strobe').checked = info.warnings?.strobe_lights || false;
-            document.getElementById('warn-haze').checked = info.warnings?.haze_machine || false;
-            document.getElementById('warn-loud').checked = info.warnings?.high_volume || false;
-            document.getElementById('warn-other').value = info.warnings?.other_warnings || '';
+            document.getElementById('info-wheel').checked =
+                info?.info_is_wheelchair_accessible ?? false;
+
+            document.getElementById('info-parking').checked =
+                info?.info_has_parking ?? false;
+
+            document.getElementById('info-transport').checked =
+                info?.info_has_public_transportation ?? false;
+
+            document.getElementById('info-food').checked =
+                info?.info_has_food_and_drinks ?? false;
+
+            document.getElementById('info-other').value =
+                info?.info_other ?? '';
+
+            document.getElementById('warn-strobe').checked =
+                info?.warn_strobe_lights ?? false;
+
+            document.getElementById('warn-haze').checked =
+                info?.warn_haze_machines ?? false;
+
+            document.getElementById('warn-loud').checked =
+                info?.warn_loud_sounds ?? false;
+
+            document.getElementById('warn-other').value =
+                info?.warn_other ?? '';
         }
 
         const parts = await apiRequest('/api/events/participants', {id: id});
@@ -680,22 +698,35 @@
             name: `event_info_${eventId}.json`,
             data: {
                 id: event_id_int,
-                info_security: {
-                    wheelchair_accessible: document.getElementById('info-wheel').checked,
-                    parking_available: document.getElementById('info-parking').checked,
-                    public_transport: document.getElementById('info-transport').checked,
-                    food_drinks: document.getElementById('info-food').checked,
-                    other_info: document.getElementById('info-other').value
-                },
-                warnings: {
-                    strobe_lights: document.getElementById('warn-strobe').checked,
-                    haze_machine: document.getElementById('warn-haze').checked,
-                    high_volume: document.getElementById('warn-loud').checked,
-                    other_warnings: document.getElementById('warn-other').value
-                }
+
+                info_is_wheelchair_accessible:
+                document.getElementById('info-wheel').checked,
+
+                info_has_parking:
+                document.getElementById('info-parking').checked,
+
+                info_has_public_transportation:
+                document.getElementById('info-transport').checked,
+
+                info_has_food_and_drinks:
+                document.getElementById('info-food').checked,
+
+                info_other:
+                    document.getElementById('info-other').value || null,
+
+                warn_strobe_lights:
+                document.getElementById('warn-strobe').checked,
+
+                warn_haze_machines:
+                document.getElementById('warn-haze').checked,
+
+                warn_loud_sounds:
+                document.getElementById('warn-loud').checked,
+
+                warn_other:
+                    document.getElementById('warn-other').value || null
             }
         };
-
         // PARTICIPANTS FILE
         const groups = await Promise.all(Array.from(document.querySelectorAll('#participants-container > div')).map(async gRow => {
             const members = await Promise.all(Array.from(gRow.querySelectorAll('.member-list > div')).map(async mRow => ({
