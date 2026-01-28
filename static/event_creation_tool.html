@@ -688,6 +688,7 @@
                 sections: sections.length > 0 ? { sections: sections } : null,
                 ticket_redirects: tickets.length > 0 ? {
                     is_open: document.getElementById('tick-is-open').value,
+                    show_ticket_redirects: tickets.length > 0,
                     redirects: tickets
                 } : null
             }
