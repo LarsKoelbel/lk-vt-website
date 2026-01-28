@@ -43,6 +43,16 @@
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; }
         .modal-box { background: white; border-radius: 20px; width: 100%; max-width: 450px; padding: 2.5rem; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: modalIn 0.3s ease-out; }
+
+        /* Step Indicator Styles */
+        .step-indicator { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 8px; }
+        .step-tab { flex: 1; padding: 0.75rem 0.5rem; background: #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .step-tab.active { background: #2563eb; color: white; }
+        .step-tab.completed { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .step-tab-num { display: block; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; opacity: 0.7; }
+        .step-tab-label { display: block; font-size: 0.7rem; font-weight: 700; }
+
+        .dl-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
     </style>
 </head>
 <body class="py-12 px-4">
@@ -74,6 +84,16 @@
         </div>
     </header>
 
+    <div id="step-nav-container" class="hidden">
+        <nav class="step-indicator">
+            <div class="step-tab" onclick="nextStep(1)" id="tab-1"><span class="step-tab-num">Step 1</span><span class="step-tab-label">Basis</span></div>
+            <div class="step-tab" onclick="nextStep(2)" id="tab-2"><span class="step-tab-num">Step 2</span><span class="step-tab-label">Content</span></div>
+            <div class="step-tab" onclick="nextStep(3)" id="tab-3"><span class="step-tab-num">Step 3</span><span class="step-tab-label">Infos</span></div>
+            <div class="step-tab" onclick="nextStep(4)" id="tab-4"><span class="step-tab-num">Step 4</span><span class="step-tab-label">Tickets</span></div>
+            <div class="step-tab" onclick="nextStep(5)" id="tab-5"><span class="step-tab-num">Step 5</span><span class="step-tab-label">Teams</span></div>
+        </nav>
+    </div>
+
     <div id="step-0" class="step-content active">
         <div class="form-card text-center">
             <div class="mb-6 text-6xl">🚀</div>
@@ -83,10 +103,10 @@
             <div class="placeholder-box">
                 <div class="text-slate-400 font-black text-xs uppercase tracking-widest mb-2">Event erstellen/ bearbeiten in mehreren Schritten</div>
                 <p class="text-slate-400 italic text-sm">Der Editor führt dich durch die einzelnen Schritte. Nur der erste ist Pflicht, alle anderen sind optional. Durch das Klicken des Buttons "Für dieses Event nicht anlegen" kannst du
-                bestimmte Abschnitte überspringen. Die entsprechenden Funktionen werden auf der Event-Page dann nicht angezeigt/ deaktiviert. Die Funktionen können später durch Bearbeiten des Termins wieder aktiviert werden.</p>
+                    bestimmte Abschnitte überspringen. Die entsprechenden Funktionen werden auf der Event-Page dann nicht angezeigt/ deaktiviert. Die Funktionen können später durch Bearbeiten des Termins wieder aktiviert werden.</p>
                 <div class="text-slate-400 font-black text-xs uppercase tracking-widest mb-2">Pflichtfelder</div>
                 <p class="text-slate-400 italic text-sm">Das einzige Pflichtfeld ist der Event-Title. Alle anderen Angaben können lehr gelassen werden und werden dann auf der Event-Page nicht angezeigt. Die Felder können jederzeit durch Bearbeiten des Termins
-                wieder befüllt werden.</p>
+                    wieder befüllt werden.</p>
             </div>
 
             <button onclick="nextStep(1)" class="btn-primary w-full shadow-lg">Editor öffnen</button>
@@ -270,6 +290,12 @@
         <div class="form-card text-center">
             <h2 class="text-3xl font-black mb-4">Bereit zum Speichern! 🚀</h2>
             <p class="text-slate-500 mb-8">Alle Daten wurden validiert und sind bereit für den Upload.</p>
+
+            <div id="download-zone" class="mb-10 text-left">
+                <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Backup & Einzel-Downloads</h3>
+                <div id="dl-list-container" class="space-y-3"></div>
+            </div>
+
             <button onclick="pushAllToApi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-xl font-black text-xl shadow-xl mb-6">Jetzt in Datenbank übertragen</button>
             <button onclick="confirmExit()" class="text-slate-400 underline">Abbrechen</button>
         </div>
@@ -481,6 +507,15 @@
         document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
         document.getElementById('step-' + s).classList.add('active');
         document.getElementById('global-nav').classList.toggle('hidden', s === 0);
+        document.getElementById('step-nav-container').classList.toggle('hidden', s === 0 || s === 6);
+
+        // Update Indicator
+        document.querySelectorAll('.step-tab').forEach((tab, idx) => {
+            const stepNum = idx + 1;
+            tab.classList.toggle('active', stepNum === s);
+            tab.classList.toggle('completed', stepNum < s);
+        });
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -523,7 +558,7 @@
             if (main.dates) main.dates.forEach(d => addDateRow(d));
             if (main.location) {
                 document.getElementById('loc-name').value = main.location.location_name || '';
-                document.getElementById('loc-addr').value = main.location.location_address || '';
+                document.getElementById('loc-address').value = main.location.location_address || '';
                 document.getElementById('loc-show-map').value = String(main.location.show_location_on_map);
                 document.getElementById('loc-coords').value = main.location.loacation_coordinates || '';
             }
@@ -537,111 +572,187 @@
                 main.sections.sections.forEach(s => addSectionRow(s));
             }
         }
-        const info = await apiRequest('/api/events/warnings_and_info', {id: id});
+
+        const info = await apiRequest('/api/events/info', {id: id});
         if (info) {
-            document.getElementById('info-wheel').checked = !!info.info_is_wheelchair_accessible;
-            document.getElementById('info-parking').checked = !!info.info_has_parking;
-            document.getElementById('info-transport').checked = !!info.info_has_public_transportation;
-            document.getElementById('info-food').checked = !!info.info_has_food_and_drinks;
-            document.getElementById('info-other').value = info.info_other || '';
-            document.getElementById('warn-strobe').checked = !!info.warn_strobe_lights;
-            document.getElementById('warn-haze').checked = !!info.warn_haze_machines;
-            document.getElementById('warn-loud').checked = !!info.warn_loud_sounds;
-            document.getElementById('warn-other').value = info.warn_other || '';
+            document.getElementById('info-wheel').checked = info.info_security?.wheelchair_accessible || false;
+            document.getElementById('info-parking').checked = info.info_security?.parking_available || false;
+            document.getElementById('info-transport').checked = info.info_security?.public_transport || false;
+            document.getElementById('info-food').checked = info.info_security?.food_drinks || false;
+            document.getElementById('info-other').value = info.info_security?.other_info || '';
+            document.getElementById('warn-strobe').checked = info.warnings?.strobe_lights || false;
+            document.getElementById('warn-haze').checked = info.warnings?.haze_machine || false;
+            document.getElementById('warn-loud').checked = info.warnings?.high_volume || false;
+            document.getElementById('warn-other').value = info.warnings?.other_warnings || '';
         }
+
         const parts = await apiRequest('/api/events/participants', {id: id});
-        if (parts && parts.groups) {
+        if (parts?.groups) {
             document.getElementById('participants-container').innerHTML = '';
             parts.groups.forEach(g => addGroupRow(g));
         }
     }
 
+    function skipSections() {
+        document.getElementById('sections-container').innerHTML = '';
+        nextStep(3);
+    }
+    function skipInfo() {
+        document.getElementById('info-section-group').querySelectorAll('input').forEach(i => i.checked = false);
+        document.getElementById('warn-section-group').querySelectorAll('input').forEach(i => i.checked = false);
+        document.getElementById('info-other').value = "";
+        document.getElementById('warn-other').value = "";
+        nextStep(4);
+    }
+    function skipTickets() {
+        document.getElementById('tick-is-open').value = "";
+        document.getElementById('tickets-container').innerHTML = "";
+        nextStep(5);
+    }
+    function skipParticipants() {
+        document.getElementById('participants-container').innerHTML = "";
+        generateFiles();
+    }
+
     async function generateFiles() {
-        showLoader("Zusammenfassung...");
-        const tickets = Array.from(document.querySelectorAll('#tickets-container > div')).map(t => ({
-            ticket_name: t.querySelector('.t-name').value,
-            ticket_price: t.querySelector('.t-price').value,
-            ticket_soled_out: t.querySelector('.t-sold').checked,
-            ticket_fuew_left: t.querySelector('.t-few').checked,
-            ticket_href: t.querySelector('.t-href').value,
-            ticket_location: document.getElementById('loc-name').value,
-            ticket_amount_available: "N/A", ticket_date: ""
+        showLoader("Validiere Daten...");
+        const event_id_int = parseInt(eventId);
+
+        // MAIN FILE
+        const dates = Array.from(document.querySelectorAll('#dates-container > div')).map(row => ({
+            date: row.querySelector('.d-date').value,
+            start: row.querySelector('.d-start').value,
+            end: row.querySelector('.d-end').value,
+            entrance: row.querySelector('.d-ent').value,
+            duration: row.querySelector('.d-dur').value,
+            note: row.querySelector('.d-note').value
         }));
 
-        const sections = [];
-        for (const div of document.querySelectorAll('#sections-container > div')) {
-            sections.push({
-                title: div.querySelector('.s-title').value || null,
-                image: await getImgValue(div.dataset.imgId),
-                text: div.querySelector('.s-text').value,
-                show_image_on_left: div.querySelector('.s-left').checked,
-                show_image_on_right: div.querySelector('.s-right').checked
-            });
-        }
+        const sections = await Promise.all(Array.from(document.querySelectorAll('#sections-container > div')).map(async row => ({
+            title: row.querySelector('.s-title').value,
+            image: await getImgValue(row.dataset.imgId),
+            text: row.querySelector('.s-text').value,
+            show_image_on_left: row.querySelector('.s-left').checked,
+            show_image_on_right: row.querySelector('.s-right').checked
+        })));
 
-        const mainData = {
-            id: eventId,
-            is_preview: document.getElementById('main-is-preview').value,
-            title: document.getElementById('main-title').value,
-            main_description: document.getElementById('main-description').value,
-            main_image: await getImgValue('main'),
-            artist: { name: document.getElementById('artist-name').value, image: await getImgValue('artist') },
-            contact: { name: document.getElementById('con-name').value, email: document.getElementById('con-email').value },
-            dates: Array.from(document.querySelectorAll('#dates-container > div')).map(d => ({
-                date: d.querySelector('.d-date').value, start: d.querySelector('.d-start').value,
-                end: d.querySelector('.d-end').value, duration: d.querySelector('.d-dur').value,
-                note: d.querySelector('.d-note').value || null, entrance: d.querySelector('.d-ent').value
-            })),
-            location: {
-                location_name: document.getElementById('loc-name').value, location_address: document.getElementById('loc-addr').value,
-                show_location_on_map: document.getElementById('loc-show-map').value === 'true',
-                loacation_coordinates: document.getElementById('loc-coords').value
-            },
-            ticket_redirects: { show_ticket_redirects: tickets.length > 0, is_open: document.getElementById('tick-is-open').value, redirects: tickets },
-            sections: { show_sections: sections.length > 0, sections: sections }
-        };
+        const tickets = Array.from(document.querySelectorAll('#tickets-container > div')).map(row => ({
+            ticket_name: row.querySelector('.t-name').value,
+            ticket_price: row.querySelector('.t-price').value,
+            ticket_href: row.querySelector('.t-href').value,
+            ticket_sold_out: row.querySelector('.t-sold').checked,
+            ticket_few_left: row.querySelector('.t-few').checked
+        }));
 
-        const infoData = {
-            id: eventId,
-            info_is_wheelchair_accessible: document.getElementById('info-wheel').checked,
-            info_has_parking: document.getElementById('info-parking').checked,
-            info_has_public_transportation: document.getElementById('info-transport').checked,
-            info_has_food_and_drinks: document.getElementById('info-food').checked,
-            info_other: document.getElementById('info-other').value || null,
-            warn_strobe_lights: document.getElementById('warn-strobe').checked,
-            warn_haze_machines: document.getElementById('warn-haze').checked,
-            warn_loud_sounds: document.getElementById('warn-loud').checked,
-            warn_other: document.getElementById('warn-other').value || null
-        };
-
-        const participants = { id: eventId, groups: [] };
-        for (const gDiv of document.querySelectorAll('#participants-container > div')) {
-            const group = { group_name: gDiv.querySelector('.g-name').value, members: [] };
-            for (const mDiv of gDiv.querySelectorAll('.member-list > div')) {
-                group.members.push({
-                    member_name: mDiv.querySelector('.m-name').value,
-                    member_role: mDiv.querySelector('.m-role').value || null,
-                    member_href: mDiv.querySelector('.m-href').value || null,
-                    member_image_source: await getImgValue(mDiv.dataset.imgId)
-                });
+        finalFiles.main = {
+            name: `event_main_${eventId}.json`,
+            data: {
+                id: event_id_int,
+                title: document.getElementById('main-title').value,
+                is_preview: document.getElementById('main-is-preview').value || "false",
+                main_image: await getImgValue('main'),
+                main_description: document.getElementById('main-description').value,
+                artist: {
+                    name: document.getElementById('artist-name').value,
+                    image: await getImgValue('artist')
+                },
+                contact: {
+                    name: document.getElementById('con-name').value,
+                    email: document.getElementById('con-email').value
+                },
+                dates: dates,
+                location: {
+                    location_name: document.getElementById('loc-name').value,
+                    location_address: document.getElementById('loc-addr').value,
+                    show_location_on_map: document.getElementById('loc-show-map').value === 'true',
+                    loacation_coordinates: document.getElementById('loc-coords').value
+                },
+                sections: sections.length > 0 ? { sections: sections } : null,
+                ticket_redirects: tickets.length > 0 ? {
+                    is_open: document.getElementById('tick-is-open').value,
+                    redirects: tickets
+                } : null
             }
-            participants.groups.push(group);
-        }
-
-        finalFiles = {
-            main: { data: mainData },
-            info: { data: infoData },
-            parts: { data: participants }
         };
+
+        // INFO FILE
+        finalFiles.info = {
+            name: `event_info_${eventId}.json`,
+            data: {
+                id: event_id_int,
+                info_security: {
+                    wheelchair_accessible: document.getElementById('info-wheel').checked,
+                    parking_available: document.getElementById('info-parking').checked,
+                    public_transport: document.getElementById('info-transport').checked,
+                    food_drinks: document.getElementById('info-food').checked,
+                    other_info: document.getElementById('info-other').value
+                },
+                warnings: {
+                    strobe_lights: document.getElementById('warn-strobe').checked,
+                    haze_machine: document.getElementById('warn-haze').checked,
+                    high_volume: document.getElementById('warn-loud').checked,
+                    other_warnings: document.getElementById('warn-other').value
+                }
+            }
+        };
+
+        // PARTICIPANTS FILE
+        const groups = await Promise.all(Array.from(document.querySelectorAll('#participants-container > div')).map(async gRow => {
+            const members = await Promise.all(Array.from(gRow.querySelectorAll('.member-list > div')).map(async mRow => ({
+                member_name: mRow.querySelector('.m-name').value,
+                member_role: mRow.querySelector('.m-role').value,
+                member_image_source: await getImgValue(mRow.dataset.imgId),
+                member_href: mRow.querySelector('.m-href').value
+            })));
+            return {
+                group_name: gRow.querySelector('.g-name').value,
+                members: members
+            };
+        }));
+
+        finalFiles.parts = {
+            name: `event_participants_${eventId}.json`,
+            data: {
+                id: event_id_int,
+                groups: groups
+            }
+        };
+
+        renderDownloadButtons();
         hideLoader();
         nextStep(6);
     }
 
-    function skipSections() { nextStep(3); }
-    function skipInfo() { nextStep(4); }
-    function skipTickets() { nextStep(5); }
-    function skipParticipants() { generateFiles(); }
+    function renderDownloadButtons() {
+        const container = document.getElementById('dl-list-container');
+        container.innerHTML = '';
+        Object.keys(finalFiles).forEach(key => {
+            const file = finalFiles[key];
+            const div = document.createElement('div');
+            div.className = 'dl-card';
+            div.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-lg text-lg">📄</div>
+                    <div>
+                        <div class="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">${key} Dataset</div>
+                        <div class="text-xs font-mono font-bold text-slate-700">${file.name}</div>
+                    </div>
+                </div>
+                <button onclick="downloadJson('${key}')" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors">Download</button>
+            `;
+            container.appendChild(div);
+        });
+    }
 
+    function downloadJson(key) {
+        const file = finalFiles[key];
+        const blob = new Blob([JSON.stringify(file.data, null, 4)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        a.click();
+    }
 </script>
 </body>
 </html>
